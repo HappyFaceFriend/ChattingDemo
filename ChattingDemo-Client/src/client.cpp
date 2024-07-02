@@ -3,6 +3,8 @@
 #include <iostream>
 #include <winsock.h>
 
+#include <Test.h>
+
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 constexpr int SERVER_PORT = 8080;
@@ -14,6 +16,9 @@ int main()
 	//std::cout << "Enter Port: ";
 	//std::cin >> port;
 	
+	Test t;
+	t.F();
+
 	// Init WSAData
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)

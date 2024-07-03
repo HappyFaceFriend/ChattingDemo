@@ -1,13 +1,13 @@
 #pragma once
 
+#include <Core/NetworkUtils.h>
+
 namespace RamenNetworking
 {
-	class NetworkSystem
+	class NetworkAPI
 	{
 	public:
-		enum class Result { Success, Fail };
-
-		NetworkSystem() = delete;
+		NetworkAPI() = delete;
 
 		static Result Init();
 		static void Cleanup();

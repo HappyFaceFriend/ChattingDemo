@@ -25,6 +25,14 @@ project "ChattingDemo-Client"
 		"RamenNetworking",
 	}
     
+	filter "system:windows"
+	systemversion "latest"
+
+	defines
+	{
+		"RNET_PLATFORM_WINDOWS",
+	}
+	
 	filter "configurations:Debug"
 		defines "CHAT_DEBUG"
 		runtime "Debug"

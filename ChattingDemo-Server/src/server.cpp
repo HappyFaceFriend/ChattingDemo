@@ -1,22 +1,20 @@
 //https://navendus.tripod.com/winsock/winsock20_01.htm
 
-
 #include <iostream>
-#include <winsock.h>
 
+#include <windows.h>
 #include <RamenNetworking.h>
 
-#pragma comment(lib, "ws2_32.lib") // Link with Winsock library
-
-constexpr int PORT = 8080;
+constexpr int SERVER_PORT = 8080;
+constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 constexpr int MAX_CLIENTS = 10;
 
-constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
+using Result = RamenNetworking::Result;
 
 struct ClientInfo
 {
-	SOCKET clientSocket;
-	struct sockaddr_in clientAddr;
+	std::unique_ptr<RamenNetworking::ClientSocket> clientSocket;
+	RamenNetworking::Address clientAddress;
 };
 
 bool ClientThread(LPVOID lpData)
@@ -25,38 +23,37 @@ bool ClientThread(LPVOID lpData)
 	char buffer[1024];
 	while (true)
 	{
-		int length = recv(clientInfo->clientSocket, buffer, sizeof(buffer), 0);
-		if (length > 0)
+		auto result = clientInfo->clientSocket->Recv(buffer, sizeof(buffer));
+		if (result == Result::Success)
 		{
-			buffer[length] = '\0';
-			std::cout << "Recieved " << buffer << " from " << inet_ntoa(clientInfo->clientAddr.sin_addr) << '\n';
+			std::cout << "Recieved " << buffer << " from " << clientInfo->clientAddress.IPAddress << ":" << clientInfo->clientAddress.PortNumber << '\n';
 
 			// Send it back
 			if (strcmp(buffer, "QUIT") == 0)
 			{
-				closesocket(clientInfo->clientSocket);
+				clientInfo->clientSocket->Close();
 				return true;
 			}
 
 			// Split message if it is too long
-			int sendCount = 0;
 			char* bufferOffset = buffer;
-
-			while ((sendCount = send(clientInfo->clientSocket, bufferOffset, length, 0)) != length)
+			int msglength = strlen(buffer) + 1;
+			while (msglength > 0)
 			{
-				if (sendCount == -1)
+				result = clientInfo->clientSocket->Send(bufferOffset, sizeof(buffer));
+				if (result == Result::Fail)
 				{
-					std::cerr << "Error sending data to "<< inet_ntoa(clientInfo->clientAddr.sin_addr) << '\n';
+					std::cerr << "Error sending data to " << clientInfo->clientAddress.IPAddress << '\n';
 					break;
 				}
-				bufferOffset += sendCount;
-				length -= sendCount;
+				bufferOffset += sizeof(buffer);
+				msglength -= sizeof(buffer);
 			}
 		}
 		else
 		{
-			std::cerr << "Error reading data from " << inet_ntoa(clientInfo->clientAddr.sin_addr) << '\n';
-			closesocket(clientInfo->clientSocket);
+			std::cerr << "Error reading data from " << clientInfo->clientAddress.IPAddress << '\n';
+			clientInfo->clientSocket->Close();
 		}
 	}
 	return true;
@@ -64,59 +61,45 @@ bool ClientThread(LPVOID lpData)
 
 int main()
 {
-	// Init WSAData
-	auto initResult = RamenNetworking::NetworkSystem::Init();
-	if (initResult == RamenNetworking::NetworkSystem::Result::Success)
-		std::cout << "Init Success!\n";
 
-	// Create socket
-	SOCKET serverSocket; //uint
-	serverSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
-	if (serverSocket == INVALID_SOCKET)
+	// Init WSAData
+	auto initResult = RamenNetworking::NetworkAPI::Init();
+	if (initResult == RamenNetworking::Result::Fail)
 	{
-		std::cerr << "Socket creation failed\n";
-		WSACleanup();
+		std::cerr << "Initailization Failed.\n";
 		return 1;
 	}
 
-	// Create structure describing server parameters
-	sockaddr_in serverAddr; // IP Address
-	serverAddr.sin_family = AF_INET; // Address family
-	serverAddr.sin_addr.s_addr = inet_addr(SERVER_IP_ADDRESS);
-	serverAddr.sin_port = htons(PORT);
+	auto serverSocket = RamenNetworking::ServerSocket::Create();
 
-	// Bind server socket to address and port
-	auto bindResult = bind(serverSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
-	if (bindResult == SOCKET_ERROR)
+	auto result = serverSocket->Init();
+	if (result == Result::Fail)
 	{
-		std::cerr << "Unable to bind to " << SERVER_IP_ADDRESS << ":" << PORT << "\n";
-		closesocket(serverSocket);
-		WSACleanup();
-		return -1;
+		RamenNetworking::NetworkAPI::Cleanup();
+		return 1;
+	}
+
+	result = serverSocket->Bind({ SERVER_IP_ADDRESS, SERVER_PORT });
+	if (result == Result::Fail)
+	{
+		RamenNetworking::NetworkAPI::Cleanup();
+		return 1;
 	}
 
 	// Put server socket to listen state
-	auto listenResult = listen(serverSocket, SOMAXCONN);
-	if (listenResult == SOCKET_ERROR)
+	result = serverSocket->Listen(5);
+	if (result == Result::Fail)
 	{
-		std::cerr << "Unable to put server to listen state\n";
-		closesocket(serverSocket);
-		WSACleanup();
-		return -1;
+		RamenNetworking::NetworkAPI::Cleanup();
+		return 1;
 	}
 
 	std::cout << "Server socket is now in listening state ...\n";
 
 	while (true)
 	{
-		// As the socket is in listen mode there is a connection request pending.
-		// Calling accept( ) will succeed and return the socket for the request.
-		SOCKET clientSocket;
-		struct sockaddr_in clientAddr;
-		int clientAddrSize = sizeof(clientAddr);
-
-		clientSocket = accept(serverSocket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrSize);
-		if (clientSocket == INVALID_SOCKET)
+		auto [clientSocket, clientAddress] = serverSocket->Accept();
+		if (clientSocket.get() == nullptr)
 		{
 			std::cerr << "accept() failed\n";
 		}
@@ -125,14 +108,13 @@ int main()
 			HANDLE clientThread;
 			DWORD threadID;
 
-			struct ClientInfo clientInfo;
-			clientInfo.clientAddr = clientAddr;
-			clientInfo.clientSocket = clientSocket;
+			// TODO : delete this
+			ClientInfo* clientInfo = new ClientInfo{ std::move(clientSocket), clientAddress };
 
-			std::cout << "Client connected from " << inet_ntoa(clientAddr.sin_addr) << '\n';
+			std::cout << "Client connected from " << clientAddress.IPAddress << '\n';
 
 			// Start client thread
-			clientThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ClientThread, (LPVOID)&clientInfo, 0, &threadID);
+			clientThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ClientThread, (LPVOID)clientInfo, 0, &threadID);
 			if (clientThread == NULL)
 			{
 				std::cerr << "Unable to create client thread\n";
@@ -143,8 +125,8 @@ int main()
 			}
 		}
 	}
-	closesocket(serverSocket);
-	WSACleanup();
+	serverSocket->Close();
+	RamenNetworking::NetworkAPI::Cleanup();
 	return 0;
 
 }

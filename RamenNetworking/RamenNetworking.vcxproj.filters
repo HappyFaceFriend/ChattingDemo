@@ -1,31 +1,77 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{2EB4837C-1AEB-840D-C3D7-6A10AFED000F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Debug">
       <UniqueIdentifier>{0C95060D-78A9-2EBE-412B-D21DADFE2AEF}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Winsock">
-      <UniqueIdentifier>{6369BF29-CF48-3EC5-D860-C99B44BFA426}</UniqueIdentifier>
+    <Filter Include="Networking">
+      <UniqueIdentifier>{6D615D47-5919-9F94-C220-78F0AEF73985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{2AC788B4-1694-E3BF-3FAD-D1672BD9184E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform\Winsock">
+      <UniqueIdentifier>{7732E01A-632B-FF6C-8C5D-E4F178B5DE78}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\Client.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Core\NetworkUtils.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Debug\Logger.h">
       <Filter>Debug</Filter>
     </ClInclude>
-    <ClInclude Include="src\MacroSetup.h" />
-    <ClInclude Include="src\Test.h" />
-    <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Defs.h" />
+    <ClInclude Include="src\Networking\Address.h">
+      <Filter>Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Networking\ClientSocket.h">
+      <Filter>Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Networking\NetworkAPI.h">
+      <Filter>Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Networking\ServerSocket.h">
+      <Filter>Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Networking\Socket.h">
+      <Filter>Networking</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Winsock\WinsockClientSocket.h">
+      <Filter>Platform\Winsock</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Winsock\WinsockServerSocket.h">
+      <Filter>Platform\Winsock</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Platform\Winsock\WinsockSocket.h">
+      <Filter>Platform\Winsock</Filter>
+    </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
-    <ClInclude Include="src\NetworkSystem.h" />
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Debug\Logger.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
-    <ClCompile Include="src\Test.cpp" />
-    <ClCompile Include="src\Winsock\WinsockNetworking.cpp">
-      <Filter>Winsock</Filter>
+    <ClCompile Include="src\Platform\Winsock\WinsockClientSocket.cpp">
+      <Filter>Platform\Winsock</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Winsock\WinsockNetworkAPI.cpp">
+      <Filter>Platform\Winsock</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Winsock\WinsockServerSocket.cpp">
+      <Filter>Platform\Winsock</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Platform\Winsock\WinsockSocket.cpp">
+      <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Networking\Socket.cpp" />
   </ItemGroup>
 </Project>

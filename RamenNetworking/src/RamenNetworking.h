@@ -1,3 +1,7 @@
 #pragma once
 
-#include "NetworkSystem.h"
+#include "Networking/ClientSocket.h"
+#include "Networking/ServerSocket.h"
+#include "Networking/Socket.h"
+
+#include "Networking/NetworkAPI.h"

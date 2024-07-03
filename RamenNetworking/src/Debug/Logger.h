@@ -27,16 +27,16 @@ namespace RamenNetworking
 }
 #ifdef RAMEN_ENABLE_LOGS
 			
-	#define RAMEN_LOG(...)			::RamenNetworking::Logger::GetLogger()->trace(__VA_ARGS__)
-	#define RAMEN_LOG_INFO(...)	::RamenNetworking::Logger::GetLogger()->info(__VA_ARGS__)
-	#define RAMEN_LOG_WARN(...)	::RamenNetworking::Logger::GetLogger()->warn(__VA_ARGS__)
-	#define RAMEN_LOG_ERROR(...)	::RamenNetworking::Logger::GetLogger()->error(__VA_ARGS__)
+	#define RNET_LOG(...)			::RamenNetworking::Logger::GetLogger()->trace(__VA_ARGS__)
+	#define RNET_LOG_INFO(...)	::RamenNetworking::Logger::GetLogger()->info(__VA_ARGS__)
+	#define RNET_LOG_WARN(...)	::RamenNetworking::Logger::GetLogger()->warn(__VA_ARGS__)
+	#define RNET_LOG_ERROR(...)	::RamenNetworking::Logger::GetLogger()->error(__VA_ARGS__)
 
 #else //ifdef RAMEN_ENABLE_LOGS
 
-	#define RAMEN_LOG(...)		
-	#define RAMEN_LOG_INFO(...)
-	#define RAMEN_LOG_WARN(...)
-	#define RAMEN_LOG_ERROR(...)
+	#define RNET_LOG(...)		
+	#define RNET_LOG_INFO(...)
+	#define RNET_LOG_WARN(...)
+	#define RNET_LOG_ERROR(...)
 
 #endif //ifdef RAMEN_ENABLE_LOGS else

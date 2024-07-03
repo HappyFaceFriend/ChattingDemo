@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "NetworkSystem.h"
+#include "Networking/NetworkAPI.h"
 
 #include <winsock.h>
 
@@ -7,23 +7,23 @@
 
 namespace RamenNetworking
 {
-	NetworkSystem::Result NetworkSystem::Init()
+	Result NetworkAPI::Init()
 	{
-#ifdef RAMEN_ENABLE_LOGS
+#ifdef RNET_ENABLE_LOGS
 		Logger::Init();
 #endif
 
 		WSADATA wsaData;
 		if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
 		{
-			RAMEN_LOG_ERROR("WSAStartup 2.2 failed!");
+			RNET_LOG_ERROR("WSAStartup 2.2 failed!");
 			return Result::Fail;
 		}
 		return Result::Success;
 	}
 
-	void NetworkSystem::Cleanup()
+	void NetworkAPI::Cleanup()
 	{
-
+		WSACleanup();
 	}
 }

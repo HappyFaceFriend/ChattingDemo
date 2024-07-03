@@ -19,13 +19,31 @@ project "RamenNetworking"
 		"src",
 		"vendor/spdlog/include",
 	}
+	removefiles 
+	{
+		"src/Platform/**.h",
+		"src/Platform/**.cpp"
+	}
+	
+	filter "system:windows"
+		systemversion "latest"
+
+		defines
+		{
+			"RNET_PLATFORM_WINDOWS",
+		}
+		files
+		{
+			"src/Platform/Winsock/**.h",
+			"src/Platform/Winsock/**.cpp"
+		}
 
 	filter "configurations:Debug"
-		defines "RAMEN_DEBUG"
+		defines "RNET_DEBUG"
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "RAMEN_RELEASE"
+		defines "RNET_RELEASE"
 		runtime "Release"
 		optimize "on"

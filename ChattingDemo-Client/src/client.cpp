@@ -9,75 +9,65 @@ constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 
 int main()
 {
-
-
 	// Init WSAData
-	auto initResult = RamenNetworking::NetworkSystem::Init();
-	if (initResult == RamenNetworking::NetworkSystem::Result::Success)
-		std::cout << "Init Success!\n";
-
-	// Create socket
-	SOCKET clientSocket; //uint
-	clientSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
-	if (clientSocket == INVALID_SOCKET)
+	auto initResult = RamenNetworking::NetworkAPI::Init();
+	if (initResult == RamenNetworking::Result::Fail)
 	{
-		std::cerr << "Socket creation failed\n";
-		WSACleanup();
+		std::cerr << "Initailization Failed.\n";
+		return 1;
+	}
+	
+	auto clientSocket = RamenNetworking::ClientSocket::Create();
+
+	auto result = clientSocket->Init();
+	if (result == RamenNetworking::Result::Fail)
+	{
+		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
-	// Create structure describing server parameters
-	sockaddr_in serverAddr; // IP Address
-	serverAddr.sin_family = AF_INET; // Address family
-	serverAddr.sin_addr.s_addr = inet_addr(SERVER_IP_ADDRESS);
-	serverAddr.sin_port = htons(SERVER_PORT);
-
-	// Connect to server
-	auto result = connect(clientSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
-	if (result < 0)
+	result = clientSocket->Connect({ SERVER_IP_ADDRESS, SERVER_PORT });
+	if (result == RamenNetworking::Result::Fail)
 	{
-		std::cerr << "Unable to connect to " << SERVER_IP_ADDRESS << ":" << SERVER_PORT << "\n";
-		closesocket(clientSocket);
-		WSACleanup();
-		return -1;
+		RamenNetworking::NetworkAPI::Cleanup();
+		return 1;
 	}
 
-	char msgBuffer[1024] = "";
+	char msgBuffer[1024] = { 0 };
 
 	while (strcmp(msgBuffer, "QUIT") != 0)
 	{
 		std::cout << "Enter Message (QUIT to quit): ";
 		std::cin >> msgBuffer;
 
-		int msgLength = strlen(msgBuffer);
+		int msgLength = strlen(msgBuffer) + 1;
 
 		// Split message if too long
-		int sendCount = 0;
 		char* bufferOffset = msgBuffer;
 
-		while ((sendCount = send(clientSocket, bufferOffset, msgLength, 0)) != msgLength)
+		while (msgLength > 0)
 		{
-			if (sendCount == -1)
+			result = clientSocket->Send(bufferOffset, msgLength);
+			if (result == RamenNetworking::Result::Fail)
 			{
 				std::cerr << "Error sending data to server\n";
 				break;
 			}
-			bufferOffset += sendCount;
-			msgLength -= sendCount;
+			bufferOffset += sizeof(msgBuffer);
+			msgLength -= sizeof(msgBuffer);
 		}
 		if (strcmp(msgBuffer, "QUIT") == 0)
 		{
 			break;
 		}
 
-		msgLength = recv(clientSocket, msgBuffer, sizeof(msgBuffer), 0);
-		if (msgLength > 0)
+		result = clientSocket->Recv(msgBuffer, sizeof(msgBuffer));
+		if (result == RamenNetworking::Result::Success)
 		{
-			msgBuffer[msgLength] = '\0';
 			std::cout << "Recieved: " << msgBuffer << '\n';
 		}
 	}
-	closesocket(clientSocket);
-	WSACleanup();
+	clientSocket->Close();
+	RamenNetworking::NetworkAPI::Cleanup();
 	return 0;
 }

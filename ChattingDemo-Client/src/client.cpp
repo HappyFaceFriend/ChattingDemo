@@ -9,6 +9,13 @@ constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 
 int main()
 {
+	std::string serverIP = SERVER_IP_ADDRESS;
+	unsigned short serverPort = SERVER_PORT;
+	std::cout << "Enter server IP: ";
+	std::cin >> serverIP;
+	std::cout << "Enter server Port: ";
+	std::cin >> serverPort;
+
 	// Init WSAData
 	auto initResult = RamenNetworking::NetworkAPI::Init();
 	if (initResult == RamenNetworking::Result::Fail)
@@ -26,7 +33,7 @@ int main()
 		return 1;
 	}
 
-	result = clientSocket->Connect({ SERVER_IP_ADDRESS, SERVER_PORT });
+	result = clientSocket->Connect({ serverIP, serverPort});
 	if (result == RamenNetworking::Result::Fail)
 	{
 		RamenNetworking::NetworkAPI::Cleanup();

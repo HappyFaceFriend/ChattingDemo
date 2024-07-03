@@ -11,6 +11,7 @@ namespace RamenNetworking
 
 	class WinsockServerSocket : public WinsockSocket, public ServerSocket
 	{
+		// TODO: Multiple inheritance spawns so many warnings
 	public:
 		WinsockServerSocket() = default;
 		WinsockServerSocket(SOCKET nativeSocket);

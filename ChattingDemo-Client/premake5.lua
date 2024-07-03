@@ -16,13 +16,13 @@ project "ChattingDemo-Client"
 	}
 	includedirs
 	{
-		"../ChattingDemo-Core/src",
+		"../RamenNetworking/src",
 		"src",
 	}
 
 	links
 	{
-		"ChattingDemo-Core",
+		"RamenNetworking",
 	}
     
 	filter "configurations:Debug"

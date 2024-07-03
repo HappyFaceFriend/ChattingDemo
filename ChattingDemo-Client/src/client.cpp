@@ -3,7 +3,7 @@
 #include <iostream>
 #include <winsock.h>
 
-#include <Test.h>
+#include <RamenNetworking.h>
 
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
@@ -12,20 +12,12 @@ constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 
 int main()
 {
-	//int port = 8080;
-	//std::cout << "Enter Port: ";
-	//std::cin >> port;
-	
-	Test t;
-	t.F();
+
 
 	// Init WSAData
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-	{
-		std::cerr << "WSAStartup failed\n";
-		return 1;
-	}
+	auto initResult = RamenNetworking::NetworkSystem::Init();
+	if (initResult == RamenNetworking::NetworkSystem::Result::Success)
+		std::cout << "Init Success!\n";
 
 	// Create socket
 	SOCKET clientSocket; //uint

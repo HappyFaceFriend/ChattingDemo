@@ -7,6 +7,6 @@ workspace "ChattingDemo"
 		"Release"
 	}
 
-    include "ChattingDemo-Core"
+    include "RamenNetworking"
     include "ChattingDemo-Server"
     include "ChattingDemo-Client"

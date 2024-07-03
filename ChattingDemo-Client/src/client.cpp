@@ -1,11 +1,8 @@
 //https://navendus.tripod.com/winsock/winsock20_01.htm
 
 #include <iostream>
-#include <winsock.h>
 
 #include <RamenNetworking.h>
-
-#pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 constexpr int SERVER_PORT = 8080;
 constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";

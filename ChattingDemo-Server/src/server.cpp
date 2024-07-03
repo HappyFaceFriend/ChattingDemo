@@ -4,6 +4,8 @@
 #include <iostream>
 #include <winsock.h>
 
+#include <RamenNetworking.h>
+
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 constexpr int PORT = 8080;
@@ -63,12 +65,9 @@ bool ClientThread(LPVOID lpData)
 int main()
 {
 	// Init WSAData
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-	{
-		std::cerr << "WSAStartup failed\n";
-		return 1;
-	}
+	auto initResult = RamenNetworking::NetworkSystem::Init();
+	if (initResult == RamenNetworking::NetworkSystem::Result::Success)
+		std::cout << "Init Success!\n";
 
 	// Create socket
 	SOCKET serverSocket; //uint

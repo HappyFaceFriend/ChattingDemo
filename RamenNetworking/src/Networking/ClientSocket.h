@@ -5,20 +5,20 @@
 #include "Socket.h"
 #include "Address.h"
 
-#include "core/NetworkUtils.h"
+#include "Core/NetworkUtils.h"
 
 namespace RamenNetworking
 {
 	class ClientSocket : public virtual Socket
 	{
 	public:
-		static std::unique_ptr<ClientSocket> Create();
-
-		virtual ~ClientSocket() = default;
-
-		virtual Result Connect(const Address& serverAddress) = 0;
-
 	protected:
 		ClientSocket() = default;
+	public:
+		virtual ~ClientSocket() = default;
+
+		static std::unique_ptr<ClientSocket> Create();
+
+		virtual Result Connect(const Address& serverAddress) = 0;
 	};
 }

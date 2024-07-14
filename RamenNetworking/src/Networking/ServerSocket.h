@@ -20,15 +20,15 @@ namespace RamenNetworking
 			Address ClientAddress;
 		};
 
-		static std::unique_ptr<ServerSocket> Create();
-
+	protected:
+		ServerSocket() = default;
+	public:
 		virtual ~ServerSocket() = default;
+
+		static std::unique_ptr<ServerSocket> Create();
 
 		virtual Result Listen(uint32_t maxQueueLength) = 0;
 		virtual Result Bind(const Address& serverAddress) = 0;
 		virtual AcceptResult Accept() = 0;
-
-	protected:
-		ServerSocket() = default;
 	};
 }

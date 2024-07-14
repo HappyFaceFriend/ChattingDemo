@@ -7,9 +7,11 @@ namespace RamenNetworking
 	class NetworkAPI
 	{
 	public:
-		NetworkAPI() = delete;
+		NetworkAPI() = default;
+		virtual ~NetworkAPI() = default;
 
-		static Result Init();
-		static void Cleanup();
+		static std::unique_ptr<NetworkAPI> NetworkAPI::Create();
+
+		virtual bool IsValid() const = 0;
 	};
 }

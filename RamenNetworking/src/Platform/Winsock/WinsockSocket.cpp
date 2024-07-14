@@ -8,6 +8,11 @@ namespace RamenNetworking
 	WinsockSocket::WinsockSocket()
 		:m_Socket(INVALID_SOCKET)
 	{
+		m_Socket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
+		if (m_Socket == INVALID_SOCKET)
+		{
+			RNET_LOG_ERROR("Socket creation failed");
+		}
 	}
 	WinsockSocket::WinsockSocket(SOCKET nativeSocket)
 		:m_Socket(nativeSocket)
@@ -20,16 +25,6 @@ namespace RamenNetworking
 			Close();
 	}
 
-	Result WinsockSocket::Init()
-	{
-		m_Socket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
-		if (m_Socket == INVALID_SOCKET)
-		{
-			RNET_LOG_ERROR("Socket creation failed");
-			return Result::Fail;
-		}
-		return Result::Success;
-	}
 
 	void WinsockSocket::Close()
 	{

@@ -1,10 +1,13 @@
 #include "pch.h"
 #include "Logger.h"
 
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 namespace RamenNetworking
 {
+#ifdef RNET_ENABLE_LOGS
+	Logger::LoggerInitializer Logger::s_Initializer;
+#endif // ifdef RNET_ENABLE_LOGS
 	std::shared_ptr<spdlog::logger> Logger::s_Logger;
 
 	void Logger::Init()

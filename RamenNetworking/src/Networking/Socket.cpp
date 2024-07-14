@@ -2,10 +2,9 @@
 #include "ServerSocket.h"
 #include "ClientSocket.h"
 
-
 #ifdef RNET_PLATFORM_WINDOWS
-#include "Platform/Winsock/WinsockClientSocket.h"
-#include "Platform/Winsock/WinsockServerSocket.h"
+	#include "Platform/Winsock/WinsockClientSocket.h"
+	#include "Platform/Winsock/WinsockServerSocket.h"
 #endif
 
 namespace RamenNetworking

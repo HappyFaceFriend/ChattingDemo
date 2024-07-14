@@ -62,27 +62,24 @@ bool ClientThread(LPVOID lpData)
 int main()
 {
 
-	// Init WSAData
-	auto initResult = RamenNetworking::NetworkAPI::Init();
-	if (initResult == RamenNetworking::Result::Fail)
+
+	auto networkAPI = RamenNetworking::NetworkAPI::Create();
+
+	if (!networkAPI->IsValid())
 	{
 		std::cerr << "Initailization Failed.\n";
 		return 1;
 	}
 
 	auto serverSocket = RamenNetworking::ServerSocket::Create();
-
-	auto result = serverSocket->Init();
-	if (result == Result::Fail)
+	if (!serverSocket->IsValid())
 	{
-		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
-	result = serverSocket->Bind({ SERVER_IP_ADDRESS, SERVER_PORT });
+	auto result = serverSocket->Bind({ SERVER_IP_ADDRESS, SERVER_PORT });
 	if (result == Result::Fail)
 	{
-		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
@@ -90,7 +87,6 @@ int main()
 	result = serverSocket->Listen(5);
 	if (result == Result::Fail)
 	{
-		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
@@ -126,7 +122,6 @@ int main()
 		}
 	}
 	serverSocket->Close();
-	RamenNetworking::NetworkAPI::Cleanup();
 	return 0;
 
 }

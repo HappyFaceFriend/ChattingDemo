@@ -16,9 +16,9 @@ int main()
 	std::cout << "Enter server Port: ";
 	std::cin >> serverPort;
 
-	// Init WSAData
-	auto initResult = RamenNetworking::NetworkAPI::Init();
-	if (initResult == RamenNetworking::Result::Fail)
+	auto networkAPI = RamenNetworking::NetworkAPI::Create();
+
+	if (!networkAPI->IsValid())
 	{
 		std::cerr << "Initailization Failed.\n";
 		return 1;
@@ -26,17 +26,14 @@ int main()
 	
 	auto clientSocket = RamenNetworking::ClientSocket::Create();
 
-	auto result = clientSocket->Init();
-	if (result == RamenNetworking::Result::Fail)
+	if (!clientSocket->IsValid())
 	{
-		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
-	result = clientSocket->Connect({ serverIP, serverPort});
+	auto result = clientSocket->Connect({ serverIP, serverPort});
 	if (result == RamenNetworking::Result::Fail)
 	{
-		RamenNetworking::NetworkAPI::Cleanup();
 		return 1;
 	}
 
@@ -75,6 +72,5 @@ int main()
 		}
 	}
 	clientSocket->Close();
-	RamenNetworking::NetworkAPI::Cleanup();
 	return 0;
 }

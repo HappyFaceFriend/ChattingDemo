@@ -13,7 +13,7 @@ namespace RamenNetworking
 		Socket(const Socket&) = delete;
 		Socket& operator=(const Socket&) = delete;
 
-		virtual Result Init() = 0;
+		virtual bool IsValid() const = 0;
 		virtual void Close() = 0;
 
 		// TODO : Change these to take in RamenNetworking::Buffer or something ?

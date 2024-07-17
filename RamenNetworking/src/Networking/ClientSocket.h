@@ -9,16 +9,13 @@
 
 namespace RamenNetworking
 {
-	class ClientSocket : public virtual Socket
+	class ClientSocket : public Socket
 	{
 	public:
-	protected:
-		ClientSocket() = default;
-	public:
-		virtual ~ClientSocket() = default;
+		ClientSocket();
+		ClientSocket(RawSocketType rawSocket);
+		virtual ~ClientSocket();;
 
-		static std::unique_ptr<ClientSocket> Create();
-
-		virtual Result Connect(const Address& serverAddress) = 0;
+		Result Connect(const Address& serverAddress);
 	};
 }

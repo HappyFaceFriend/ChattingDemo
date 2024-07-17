@@ -37,21 +37,10 @@
     <ClInclude Include="src\Networking\ServerSocket.h">
       <Filter>Networking</Filter>
     </ClInclude>
-    <ClInclude Include="src\Networking\Socket.h">
-      <Filter>Networking</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Platform\Winsock\WinsockClientSocket.h">
-      <Filter>Platform\Winsock</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Platform\Winsock\WinsockServerSocket.h">
-      <Filter>Platform\Winsock</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Platform\Winsock\WinsockSocket.h">
-      <Filter>Platform\Winsock</Filter>
-    </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
     <ClInclude Include="src\pch.h" />
     <ClInclude Include="src\Platform\Winsock\WinsockNetworkAPI.h" />
+    <ClInclude Include="src\Networking\Socket.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Debug\Logger.cpp">
@@ -70,7 +59,6 @@
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\Networking\Socket.cpp" />
     <ClCompile Include="src\Networking\NetworkAPI.cpp" />
   </ItemGroup>
 </Project>

@@ -1,23 +1,37 @@
 #pragma once
 
+#ifdef RNET_PLATFORM_WINDOWS
+#include <winsock.h>
+#endif
+
 #include "core/NetworkUtils.h"
 
 namespace RamenNetworking
 {
+#ifdef RNET_PLATFORM_WINDOWS
+	using RawSocketType = SOCKET;
+#endif
+
 	class Socket
 	{
 	public:
-		Socket() = default;
-		virtual ~Socket() = default;
+		Socket();
+		Socket(RawSocketType rawSocket);
+		virtual ~Socket();
 
 		Socket(const Socket&) = delete;
 		Socket& operator=(const Socket&) = delete;
+		Socket(Socket&&) = delete;
+		Socket& operator=(Socket&&) = delete;
 
-		virtual bool IsValid() const = 0;
-		virtual void Close() = 0;
+		bool IsValid() const;
+		void Close();
 
 		// TODO : Change these to take in RamenNetworking::Buffer or something ?
-		virtual Result Recv(char* buffer, uint32_t bufferSize) = 0;
-		virtual Result Send(const char* buffer, uint32_t msgSize) = 0;
+		Result Recv(char* buffer, uint32_t bufferSize);
+		Result Send(const char* buffer, uint32_t msgSize);
+
+	protected:
+		RawSocketType m_RawSocket;
 	};
 }

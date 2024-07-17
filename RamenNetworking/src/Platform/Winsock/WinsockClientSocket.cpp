@@ -1,17 +1,23 @@
 #include "pch.h"
-#include "WinsockClientSocket.h"
+#include "Networking/ClientSocket.h"
 
 namespace RamenNetworking
 {
-	WinsockClientSocket::WinsockClientSocket(SOCKET nativeSocket)
-	: WinsockSocket(nativeSocket)
+	ClientSocket::ClientSocket()
+		: Socket()
 	{
-
+	}
+	ClientSocket::ClientSocket(RawSocketType rawSocket)
+		: Socket(rawSocket)
+	{
+	}
+	ClientSocket::~ClientSocket()
+	{
 	}
 
-	Result WinsockClientSocket::Connect(const Address& serverAddress)
+	Result ClientSocket::Connect(const Address& serverAddress)
 	{
-		ASSERT(m_Socket != INVALID_SOCKET);
+		ASSERT(m_RawSocket != INVALID_SOCKET);
 		// TODO : check serverAddress validity
 
 		sockaddr_in serverAddr; // IP Address
@@ -20,7 +26,7 @@ namespace RamenNetworking
 		serverAddr.sin_port = htons(serverAddress.PortNumber);
 
 		// Connect to server
-		auto result = connect(m_Socket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
+		auto result = connect(m_RawSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
 		if (result == SOCKET_ERROR)
 		{
 			RNET_LOG_ERROR("Connecting to server {0}:{1} failed.", serverAddress.IPAddress, serverAddress.PortNumber);

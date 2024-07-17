@@ -1,20 +1,24 @@
 #include "pch.h"
-#include "WinsockServerSocket.h"
-
-#include "WinsockClientSocket.h"
+#include "Networking/ServerSocket.h"
 
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 namespace RamenNetworking
 {
-	WinsockServerSocket::WinsockServerSocket(SOCKET nativeSocket)
-		: WinsockSocket(nativeSocket)
+	ServerSocket::ServerSocket()
+		: Socket()
 	{
-
 	}
-	Result WinsockServerSocket::Bind(const Address& serverAddress)
+	ServerSocket::ServerSocket(RawSocketType rawSocket)
+		: Socket(rawSocket)
 	{
-		ASSERT(m_Socket != INVALID_SOCKET);
+	}
+	ServerSocket::~ServerSocket()
+	{
+	}
+	Result ServerSocket::Bind(const Address& serverAddress)
+	{
+		ASSERT(m_RawSocket != INVALID_SOCKET);
 		// TODO : check serverAddress validity
 
 		sockaddr_in serverAddr; // IP Address
@@ -22,7 +26,7 @@ namespace RamenNetworking
 		serverAddr.sin_addr.s_addr = inet_addr(serverAddress.IPAddress.c_str());
 		serverAddr.sin_port = htons(serverAddress.PortNumber);
 
-		auto result = bind(m_Socket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
+		auto result = bind(m_RawSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
 		if (result == SOCKET_ERROR)
 		{
 			RNET_LOG_ERROR("Binding address {0}:{1} failed.", serverAddress.IPAddress, serverAddress.PortNumber);
@@ -31,12 +35,12 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	Result WinsockServerSocket::Listen(uint32_t maxQueueLength)
+	Result ServerSocket::Listen(uint32_t maxQueueLength)
 	{
-		ASSERT(m_Socket != INVALID_SOCKET);
-		ASSERT(maxQueueLength <= std::numeric_limits<int>::max());
+		ASSERT(m_RawSocket != INVALID_SOCKET);
+		ASSERT(maxQueueLength <= static_cast<uint32_t>(std::numeric_limits<int>::max()));
 
-		auto result = listen(m_Socket, maxQueueLength);
+		auto result = listen(m_RawSocket, maxQueueLength);
 		if (result == SOCKET_ERROR)
 		{
 			RNET_LOG_ERROR("Putting into listening state failed.");
@@ -45,18 +49,18 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	ServerSocket::AcceptResult WinsockServerSocket::Accept()
+	ServerSocket::AcceptResult ServerSocket::Accept()
 	{
 		SOCKET clientSocket;
 		struct sockaddr_in clientAddr;
 		int clientAddrSize = sizeof(clientAddr);
 
-		clientSocket = accept(m_Socket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrSize);
+		clientSocket = accept(m_RawSocket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET)
 		{
 			RNET_LOG_ERROR("Accepting new socket failed.");
 			return { nullptr, Address() };
 		}
-		return { std::make_unique<WinsockClientSocket>(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
+		return { std::make_unique<ClientSocket>(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
 	}
 }

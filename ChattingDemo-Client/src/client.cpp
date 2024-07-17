@@ -24,14 +24,14 @@ int main()
 		return 1;
 	}
 	
-	auto clientSocket = RamenNetworking::ClientSocket::Create();
+	RamenNetworking::ClientSocket clientSocket;
 
-	if (!clientSocket->IsValid())
+	if (!clientSocket.IsValid())
 	{
 		return 1;
 	}
 
-	auto result = clientSocket->Connect({ serverIP, serverPort});
+	auto result = clientSocket.Connect({ serverIP, serverPort});
 	if (result == RamenNetworking::Result::Fail)
 	{
 		return 1;
@@ -51,7 +51,7 @@ int main()
 
 		while (msgLength > 0)
 		{
-			result = clientSocket->Send(bufferOffset, msgLength);
+			result = clientSocket.Send(bufferOffset, msgLength);
 			if (result == RamenNetworking::Result::Fail)
 			{
 				std::cerr << "Error sending data to server\n";
@@ -65,12 +65,12 @@ int main()
 			break;
 		}
 
-		result = clientSocket->Recv(msgBuffer, sizeof(msgBuffer));
+		result = clientSocket.Recv(msgBuffer, sizeof(msgBuffer));
 		if (result == RamenNetworking::Result::Success)
 		{
 			std::cout << "Recieved: " << msgBuffer << '\n';
 		}
 	}
-	clientSocket->Close();
+	clientSocket.Close();
 	return 0;
 }

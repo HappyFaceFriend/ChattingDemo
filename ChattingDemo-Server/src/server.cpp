@@ -56,6 +56,7 @@ bool ClientThread(LPVOID lpData)
 			clientInfo->clientSocket->Close();
 		}
 	}
+	clientInfo->clientSocket->Close();
 	return true;
 }
 
@@ -71,20 +72,20 @@ int main()
 		return 1;
 	}
 
-	auto serverSocket = RamenNetworking::ServerSocket::Create();
-	if (!serverSocket->IsValid())
+	RamenNetworking::ServerSocket serverSocket;
+	if (!serverSocket.IsValid())
 	{
 		return 1;
 	}
 
-	auto result = serverSocket->Bind({ SERVER_IP_ADDRESS, SERVER_PORT });
+	auto result = serverSocket.Bind({ SERVER_IP_ADDRESS, SERVER_PORT });
 	if (result == Result::Fail)
 	{
 		return 1;
 	}
 
 	// Put server socket to listen state
-	result = serverSocket->Listen(5);
+	result = serverSocket.Listen(5);
 	if (result == Result::Fail)
 	{
 		return 1;
@@ -94,8 +95,8 @@ int main()
 
 	while (true)
 	{
-		auto [clientSocket, clientAddress] = serverSocket->Accept();
-		if (clientSocket.get() == nullptr)
+		auto [clientSocket, clientAddress] = serverSocket.Accept();
+		if (!clientSocket)
 		{
 			std::cerr << "accept() failed\n";
 		}
@@ -121,7 +122,7 @@ int main()
 			}
 		}
 	}
-	serverSocket->Close();
+	serverSocket.Close();
 	return 0;
 
 }

@@ -1,62 +1,70 @@
 #include "pch.h"
-#include "WinsockSocket.h"
+#include "Networking/Socket.h"
 
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 namespace RamenNetworking
 {
-	WinsockSocket::WinsockSocket()
-		:m_Socket(INVALID_SOCKET)
+	Socket::Socket()
+		:m_RawSocket(INVALID_SOCKET)
 	{
-		m_Socket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
-		if (m_Socket == INVALID_SOCKET)
+		m_RawSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
+		if (m_RawSocket == INVALID_SOCKET)
 		{
+			// TODO : Add WSA Error code to all logs
 			RNET_LOG_ERROR("Socket creation failed");
 		}
 	}
-	WinsockSocket::WinsockSocket(SOCKET nativeSocket)
-		:m_Socket(nativeSocket)
+	Socket::Socket(RawSocketType rawSocket)
+		:m_RawSocket(rawSocket)
 	{
 	}
 
-	WinsockSocket::~WinsockSocket()
+	Socket::~Socket()
 	{
-		if (m_Socket != INVALID_SOCKET)
+		if (m_RawSocket != INVALID_SOCKET)
 			Close();
 	}
 
 
-	void WinsockSocket::Close()
-	{
-		closesocket(m_Socket);
-		m_Socket = INVALID_SOCKET;
+	bool Socket::IsValid() const
+	{ 
+		return m_RawSocket != INVALID_SOCKET;
 	}
 
-	Result WinsockSocket::Recv(char* buffer, uint32_t bufferLength)
+	void Socket::Close()
 	{
-		ASSERT(m_Socket != INVALID_SOCKET);
+		closesocket(m_RawSocket);
+		m_RawSocket = INVALID_SOCKET;
+	}
+
+	Result Socket::Recv(char* buffer, uint32_t bufferLength)
+	{
+		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(bufferLength <= std::numeric_limits<int>::max());
 		// TODO : Check if buffer length < length
 
-		auto msgLength = recv(m_Socket, buffer, bufferLength, 0);
+		auto msgLength = recv(m_RawSocket, buffer, bufferLength, 0);
 		if (msgLength < 0)
 		{
-			RNET_LOG_ERROR("Failed to send data to server");
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
 			return Result::Fail;
 		}
 		return Result::Success;
 	}
 
-	Result WinsockSocket::Send(const char* buffer, uint32_t msgSize)
+	Result Socket::Send(const char* buffer, uint32_t msgSize)
 	{
-		ASSERT(m_Socket != INVALID_SOCKET);
+		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(msgSize <= std::numeric_limits<int>::max());
 		// TODO : Check if buffer length >= length
 
-		auto sentLength = send(m_Socket, buffer, msgSize, 0);
+		auto sentLength = send(m_RawSocket, buffer, msgSize, 0);
 		if (sentLength < 0)
 		{
-			RNET_LOG_ERROR("Failed to send data to server");
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
 			return Result::Fail;
 		}
 		return Result::Success;

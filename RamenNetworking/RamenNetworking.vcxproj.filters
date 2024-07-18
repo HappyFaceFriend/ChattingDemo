@@ -18,6 +18,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Core\Client.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="src\Core\NetworkUtils.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -45,9 +48,12 @@
     </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\Core\Client.h" />
+    <ClInclude Include="src\Core\Server.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Core\Client.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="src\Debug\Logger.cpp">
       <Filter>Debug</Filter>
     </ClCompile>
@@ -67,6 +73,6 @@
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\Core\Client.cpp" />
+    <ClCompile Include="src\Core\Server.cpp" />
   </ItemGroup>
 </Project>

@@ -21,16 +21,20 @@ namespace RamenNetworking
 		Result SendMessageToServer(char* buffer, uint32_t bufferSize);
 
 		std::queue<std::vector<char>>& GetMessageQueue() { return m_MessageQueue;  }
+
 	private:
 		void NetworkLoop();
+
 	private:
 		ClientSocket m_Socket{};
-		std::thread m_ConnectionThread{};
+		std::thread m_NetworkThread{};
 		Address m_ServerAddress{};
 
-		// TEMP
+		// TEMP: This should be thread safe
 		std::queue<std::vector<char>> m_MessageQueue{};
 
 		bool m_IsRunning = false;
+
+		// TODO: Maintain connection status
 	};
 }

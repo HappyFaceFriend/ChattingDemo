@@ -14,6 +14,9 @@ namespace RamenNetworking
 		ClientSocket(RawSocketType rawSocket);
 		virtual ~ClientSocket();
 
+		ClientSocket(ClientSocket&& other) noexcept;
+		ClientSocket& operator=(ClientSocket&& other) noexcept;
+
 		Result Connect(const Address& serverAddress);
 	};
 }

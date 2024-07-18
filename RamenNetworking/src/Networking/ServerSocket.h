@@ -15,9 +15,8 @@ namespace RamenNetworking
 	public:
 		struct AcceptResult
 		{
-			// TODO : Find a way to not heap allocate this
-			std::unique_ptr<ClientSocket> ClientSocket;
-			Address ClientAddress;
+			ClientSocket clientSocket;
+			Address clientAddress;
 		};
 
 		ServerSocket();

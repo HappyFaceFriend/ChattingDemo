@@ -65,8 +65,8 @@ namespace RamenNetworking
 		{
 			auto errorCode = WSAGetLastError();
 			RNET_LOG_ERROR("Accepting new socket failed. WSAErrorCode: {0}", errorCode);
-			return { nullptr, Address() };
+			return { ClientSocket(), Address()};
 		}
-		return { std::make_unique<ClientSocket>(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
+		return { ClientSocket(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
 	}
 }

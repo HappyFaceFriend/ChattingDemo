@@ -39,7 +39,7 @@ int main()
 		while (!messageQueue.empty())
 		{
 			auto message = messageQueue.front();
-			client.GetMessageQueue().pop();
+			messageQueue.pop();
 
 			std::cout << "Received: " << std::string(message.data()) << "\n";
 		}

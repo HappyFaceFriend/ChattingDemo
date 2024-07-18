@@ -11,7 +11,8 @@ namespace RamenNetworking
 
 	Client::~Client()
 	{
-		m_ConnectionThread.join();
+		m_IsRunning = false;
+		m_NetworkThread.join();
 	}
 
 	Result Client::Init()
@@ -36,7 +37,7 @@ namespace RamenNetworking
 		ASSERT(m_Socket.IsValid());
 		m_ServerAddress = serverAddress;
 		m_IsRunning = true;
-		m_ConnectionThread = std::thread([this]() { NetworkLoop(); });
+		m_NetworkThread = std::thread([this]() { NetworkLoop(); });
 	}
 
 	Result Client::SendMessageToServer(char* buffer, uint32_t bufferSize)

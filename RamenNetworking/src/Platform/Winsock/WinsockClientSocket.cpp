@@ -17,6 +17,19 @@ namespace RamenNetworking
 	{
 	}
 
+	ClientSocket::ClientSocket(ClientSocket&& other) noexcept
+	{
+		m_RawSocket = other.m_RawSocket;
+		other.m_RawSocket = INVALID_SOCKET;
+	}
+
+	ClientSocket& ClientSocket::operator=(ClientSocket&& other) noexcept
+	{
+		m_RawSocket = other.m_RawSocket;
+		other.m_RawSocket = INVALID_SOCKET;
+		return *this;
+	}
+
 	Result ClientSocket::Connect(const Address& serverAddress)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);

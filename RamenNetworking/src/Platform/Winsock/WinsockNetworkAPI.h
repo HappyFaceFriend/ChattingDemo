@@ -6,19 +6,19 @@
 
 namespace RamenNetworking
 {
-	class WinsockNetworkAPI : public NetworkAPI
+	class WinsockNetworkAPI : public NetworkAPIInstance
 	{
 	public:
-		WinsockNetworkAPI();
+		WinsockNetworkAPI() = default;
 		virtual ~WinsockNetworkAPI();
 
-		bool IsValid() const { return m_WSAStatus == WSAStatus::InitSuccessed; }
+		virtual Result Init() override;
+		virtual bool IsValid() const override { return m_WSAStatus == WSAStatus::InitSuccessed; }
 
 	private:
 		enum class WSAStatus { NotInitialized, InitSuccessed, InitFailed };
 
-		
 		WSAStatus m_WSAStatus = WSAStatus::NotInitialized;
-		WSADATA m_WSAData;
+		WSADATA m_WSAData{};
 	};
 }

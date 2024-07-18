@@ -7,13 +7,5 @@
 
 namespace RamenNetworking
 {
-	std::unique_ptr<NetworkAPI> NetworkAPI::Create()
-	{
-#ifdef RNET_PLATFORM_WINDOWS
-		return std::make_unique<WinsockNetworkAPI>();
-#endif
-		RNET_ASSERT(false, "Current platform is not supported.");
-		return nullptr;
-	}
-
+	static std::unique_ptr<NetworkAPIInstance> s_Instance = std::make_unique<WinsockNetworkAPI>();
 }

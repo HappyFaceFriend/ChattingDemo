@@ -45,6 +45,7 @@
     </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Core\Client.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Debug\Logger.cpp">
@@ -66,5 +67,6 @@
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Core\Client.cpp" />
   </ItemGroup>
 </Project>

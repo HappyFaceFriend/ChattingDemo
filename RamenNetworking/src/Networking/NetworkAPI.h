@@ -4,14 +4,27 @@
 
 namespace RamenNetworking
 {
+	class NetworkAPI;
+
+	class NetworkAPIInstance
+	{
+	public:
+		NetworkAPIInstance() = default;
+		virtual ~NetworkAPIInstance() = default;
+
+		virtual Result Init() = 0;
+		virtual bool IsValid() const = 0;
+	};
+
 	class NetworkAPI
 	{
 	public:
-		NetworkAPI() = default;
-		virtual ~NetworkAPI() = default;
+		NetworkAPI() = delete;
 
-		static std::unique_ptr<NetworkAPI> NetworkAPI::Create();
+		static Result Init() { return s_Instance->Init(); }
+		static bool IsValid() { return s_Instance->IsValid(); }
 
-		virtual bool IsValid() const = 0;
+	private:
+		static std::unique_ptr<NetworkAPIInstance> s_Instance;
 	};
 }

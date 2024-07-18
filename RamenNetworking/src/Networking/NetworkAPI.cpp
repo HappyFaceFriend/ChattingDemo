@@ -7,5 +7,5 @@
 
 namespace RamenNetworking
 {
-	static std::unique_ptr<NetworkAPIInstance> s_Instance = std::make_unique<WinsockNetworkAPI>();
+	std::unique_ptr<NetworkAPIInstance> NetworkAPI::s_Instance = std::make_unique<WinsockNetworkAPI>();
 }

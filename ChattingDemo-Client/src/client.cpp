@@ -16,26 +16,10 @@ int main()
 	std::cout << "Enter server Port: ";
 	std::cin >> serverPort;
 
-	auto networkAPI = RamenNetworking::NetworkAPI::Create();
+	RamenNetworking::Client client;
+	client.Init();
 
-	if (!networkAPI->IsValid())
-	{
-		std::cerr << "Initailization Failed.\n";
-		return 1;
-	}
-	
-	RamenNetworking::ClientSocket clientSocket;
-
-	if (!clientSocket.IsValid())
-	{
-		return 1;
-	}
-
-	auto result = clientSocket.Connect({ serverIP, serverPort});
-	if (result == RamenNetworking::Result::Fail)
-	{
-		return 1;
-	}
+	client.ConnectToServer({ serverIP, serverPort });
 
 	char msgBuffer[1024] = { 0 };
 
@@ -44,33 +28,21 @@ int main()
 		std::cout << "Enter Message (QUIT to quit): ";
 		std::cin >> msgBuffer;
 
-		int msgLength = strlen(msgBuffer) + 1;
-
-		// Split message if too long
-		char* bufferOffset = msgBuffer;
-
-		while (msgLength > 0)
-		{
-			result = clientSocket.Send(bufferOffset, msgLength);
-			if (result == RamenNetworking::Result::Fail)
-			{
-				std::cerr << "Error sending data to server\n";
-				break;
-			}
-			bufferOffset += sizeof(msgBuffer);
-			msgLength -= sizeof(msgBuffer);
-		}
+		client.SendMessageToServer(msgBuffer, sizeof(msgBuffer));
+		
 		if (strcmp(msgBuffer, "QUIT") == 0)
 		{
 			break;
 		}
-
-		result = clientSocket.Recv(msgBuffer, sizeof(msgBuffer));
-		if (result == RamenNetworking::Result::Success)
+		
+		auto& messageQueue = client.GetMessageQueue();
+		while (!messageQueue.empty())
 		{
-			std::cout << "Recieved: " << msgBuffer << '\n';
+			auto message = messageQueue.front();
+			client.GetMessageQueue().pop();
+
+			std::cout << "Received: " << std::string(message.data()) << "\n";
 		}
 	}
-	clientSocket.Close();
 	return 0;
 }

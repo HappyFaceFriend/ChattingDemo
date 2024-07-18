@@ -63,16 +63,15 @@ bool ClientThread(LPVOID lpData)
 int main()
 {
 
-
-	auto networkAPI = RamenNetworking::NetworkAPI::Create();
-
-	if (!networkAPI->IsValid())
+	RamenNetworking::NetworkAPI::Init();
+	if (!RamenNetworking::NetworkAPI::IsValid())
 	{
 		std::cerr << "Initailization Failed.\n";
 		return 1;
 	}
 
 	RamenNetworking::ServerSocket serverSocket;
+	serverSocket.Init();
 	if (!serverSocket.IsValid())
 	{
 		return 1;

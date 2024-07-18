@@ -8,12 +8,6 @@ namespace RamenNetworking
 	Socket::Socket()
 		:m_RawSocket(INVALID_SOCKET)
 	{
-		m_RawSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
-		if (m_RawSocket == INVALID_SOCKET)
-		{
-			auto errorCode = WSAGetLastError();
-			RNET_LOG_ERROR("Socket creation failed. WSAErrorCode: {0}", errorCode);
-		}
 	}
 
 	Socket::Socket(RawSocketType rawSocket)
@@ -25,6 +19,18 @@ namespace RamenNetworking
 	{
 		if (m_RawSocket != INVALID_SOCKET)
 			Close();
+	}
+
+	Result Socket::Init()
+	{
+		m_RawSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
+		if (m_RawSocket == INVALID_SOCKET)
+		{
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Socket creation failed. WSAErrorCode: {0}", errorCode);
+			return Result::Fail;
+		}
+		return Result::Success;
 	}
 
 	bool Socket::IsValid() const

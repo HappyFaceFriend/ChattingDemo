@@ -24,6 +24,7 @@ namespace RamenNetworking
 		Socket(Socket&&) = delete;
 		Socket& operator=(Socket&&) = delete;
 
+		Result Init();
 		bool IsValid() const;
 		void Close();
 

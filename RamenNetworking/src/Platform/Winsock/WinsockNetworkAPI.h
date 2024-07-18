@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Networking/NetworkAPI.h"
-
 #include <winsock.h>
+
+#include "Networking/NetworkAPI.h"
 
 namespace RamenNetworking
 {

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "Socket.h"
 #include "Address.h"
 
@@ -14,7 +12,7 @@ namespace RamenNetworking
 	public:
 		ClientSocket();
 		ClientSocket(RawSocketType rawSocket);
-		virtual ~ClientSocket();;
+		virtual ~ClientSocket();
 
 		Result Connect(const Address& serverAddress);
 	};

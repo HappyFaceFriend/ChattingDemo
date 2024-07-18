@@ -6,7 +6,7 @@
 #include "Address.h"
 #include "ClientSocket.h"
 
-#include "core/NetworkUtils.h"
+#include "Core/NetworkUtils.h"
 
 namespace RamenNetworking
 {

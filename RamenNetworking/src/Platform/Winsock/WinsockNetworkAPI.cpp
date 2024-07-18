@@ -9,7 +9,8 @@ namespace RamenNetworking
 	{
 		if (WSAStartup(MAKEWORD(2, 2), &m_WSAData) != 0)
 		{
-			RNET_LOG_ERROR("WSAStartup 2.2 failed!");
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("WSAStartup 2.2 failed! WSAErrorCode: {0}", errorCode);
 			m_WSAStatus = WSAStatus::InitFailed;
 		}
 		else

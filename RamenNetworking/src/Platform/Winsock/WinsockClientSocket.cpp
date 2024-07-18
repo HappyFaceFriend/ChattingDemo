@@ -7,10 +7,12 @@ namespace RamenNetworking
 		: Socket()
 	{
 	}
+
 	ClientSocket::ClientSocket(RawSocketType rawSocket)
 		: Socket(rawSocket)
 	{
 	}
+
 	ClientSocket::~ClientSocket()
 	{
 	}
@@ -29,7 +31,8 @@ namespace RamenNetworking
 		auto result = connect(m_RawSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
 		if (result == SOCKET_ERROR)
 		{
-			RNET_LOG_ERROR("Connecting to server {0}:{1} failed.", serverAddress.IPAddress, serverAddress.PortNumber);
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Connecting to server {0}:{1} failed. WSAErrorCode: {2}", serverAddress.IPAddress, serverAddress.PortNumber, errorCode);
 			return Result::Fail;
 		}
 		return Result::Success;

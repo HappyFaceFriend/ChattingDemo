@@ -9,13 +9,16 @@ namespace RamenNetworking
 		: Socket()
 	{
 	}
+
 	ServerSocket::ServerSocket(RawSocketType rawSocket)
 		: Socket(rawSocket)
 	{
 	}
+
 	ServerSocket::~ServerSocket()
 	{
 	}
+
 	Result ServerSocket::Bind(const Address& serverAddress)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
@@ -29,7 +32,8 @@ namespace RamenNetworking
 		auto result = bind(m_RawSocket, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr));
 		if (result == SOCKET_ERROR)
 		{
-			RNET_LOG_ERROR("Binding address {0}:{1} failed.", serverAddress.IPAddress, serverAddress.PortNumber);
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Binding address {0}:{1} failed. WSAErrorCode: {2}", serverAddress.IPAddress, serverAddress.PortNumber, errorCode);
 			return Result::Fail;
 		}
 		return Result::Success;
@@ -43,7 +47,8 @@ namespace RamenNetworking
 		auto result = listen(m_RawSocket, maxQueueLength);
 		if (result == SOCKET_ERROR)
 		{
-			RNET_LOG_ERROR("Putting into listening state failed.");
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Putting into listening state failed. WSAErrorCode: {0}", errorCode);
 			return Result::Fail;
 		}
 		return Result::Success;
@@ -58,7 +63,8 @@ namespace RamenNetworking
 		clientSocket = accept(m_RawSocket, reinterpret_cast<sockaddr*>(&clientAddr), &clientAddrSize);
 		if (clientSocket == INVALID_SOCKET)
 		{
-			RNET_LOG_ERROR("Accepting new socket failed.");
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Accepting new socket failed. WSAErrorCode: {0}", errorCode);
 			return { nullptr, Address() };
 		}
 		return { std::make_unique<ClientSocket>(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };

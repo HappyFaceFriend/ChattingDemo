@@ -36,6 +36,8 @@ namespace RamenNetworking
 	void Client::ConnectToServer(const Address& serverAddress)
 	{
 		ASSERT(m_Socket.IsValid());
+		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Disconnected);
+
 		m_ServerAddress = serverAddress;
 		m_IsRunning.store(true, std::memory_order_relaxed);
 		m_NetworkThread = std::thread([this]() { NetworkLoop(); });
@@ -43,6 +45,8 @@ namespace RamenNetworking
 
 	Result Client::SendMessageToServer(char* buffer, uint32_t bufferSize)
 	{
+		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
+
 		auto result = m_Socket.Send(buffer, bufferSize);
 		if (result == RamenNetworking::Result::Fail)
 		{
@@ -53,6 +57,8 @@ namespace RamenNetworking
 	}
 	void Client::Disconnect()
 	{
+		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
+
 		m_Status.store(Status::Disconnecting, std::memory_order_release);
 		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
 		m_NetworkThread.join();
@@ -69,6 +75,7 @@ namespace RamenNetworking
 		if (result == RamenNetworking::Result::Fail)
 		{
 			RNET_LOG_ERROR("Failed to connect to server.");
+			m_Status.store(Status::Disconnected, std::memory_order_release);
 			return;
 		}
 

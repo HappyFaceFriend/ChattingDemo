@@ -11,8 +11,8 @@ namespace RamenNetworking
 
 	Client::~Client()
 	{
-		m_IsRunning = false;
-		m_NetworkThread.join();
+		Disconnect();
+		m_Socket.Close();
 	}
 
 	Result Client::Init()
@@ -31,12 +31,13 @@ namespace RamenNetworking
 			RNET_LOG_ERROR("Failed socket initialization.");
 			return Result::Fail;
 		}
+		return Result::Success;
 	}
 	void Client::ConnectToServer(const Address& serverAddress)
 	{
 		ASSERT(m_Socket.IsValid());
 		m_ServerAddress = serverAddress;
-		m_IsRunning = true;
+		m_IsRunning.store(true, std::memory_order_relaxed);
 		m_NetworkThread = std::thread([this]() { NetworkLoop(); });
 	}
 
@@ -50,8 +51,15 @@ namespace RamenNetworking
 		}
 		return Result::Success;
 	}
+	void Client::Disconnect()
+	{
+		m_Status.store(Status::Disconnecting, std::memory_order_release);
+		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
+		m_NetworkThread.join();
+	}
 	void Client::NetworkLoop()
 	{
+		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
 		// TEMP
 		constexpr uint32_t MSG_SIZE = 1024;
 		std::vector<char> messageBuffer(MSG_SIZE);
@@ -64,7 +72,8 @@ namespace RamenNetworking
 			return;
 		}
 
-		while (m_IsRunning)
+		m_Status.store(Status::Connected, std::memory_order_release);
+		while (m_IsRunning.load(std::memory_order_acquire))
 		{
 			result = m_Socket.Recv(messageBuffer.data(), MSG_SIZE);
 			if (result == Result::Success)
@@ -77,6 +86,6 @@ namespace RamenNetworking
 				break;
 			}
 		}
-		m_Socket.Close();
+		m_Status.store(Status::Disconnected, std::memory_order_release);
 	}
 }

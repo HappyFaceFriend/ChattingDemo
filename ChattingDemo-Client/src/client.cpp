@@ -35,8 +35,8 @@ int main()
 			break;
 		}
 		
-		std::vector<char> message;
-		while (client.PollMessage(message))
+		auto messages = client.PollMessages();
+		for(auto& message : messages)
 		{
 			std::cout << "Received: " << std::string(message.data()) << "\n";
 		}

@@ -87,7 +87,7 @@ namespace RamenNetworking
 			if (result == Result::Success)
 			{
 				std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
-				m_MessageQueue.push(messageBuffer);
+				m_MessageQueue.push_back(messageBuffer);
 			}
 			else
 			{
@@ -97,17 +97,17 @@ namespace RamenNetworking
 		}
 		m_Status.store(Status::Disconnected, std::memory_order_release);
 	}
-	bool Client::PollMessage(std::vector<char>& outMessage)
+	std::vector<std::vector<char>> Client::PollMessages()
 	{
 		std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
 
 		if (m_MessageQueue.empty())
-			return false;
-		else
-		{
-			outMessage = std::move(m_MessageQueue.front());
-			m_MessageQueue.pop();
-			return true;
-		}
+			return {};
+
+		auto messages = std::vector<std::vector<char>>(std::make_move_iterator(m_MessageQueue.begin()),
+												std::make_move_iterator(m_MessageQueue.end()));
+		m_MessageQueue.clear();
+
+		return messages;
 	}
 }

@@ -25,7 +25,7 @@ namespace RamenNetworking
 		void ConnectToServer(const Address& serverAddress);
 		Result SendMessageToServer(char* buffer, uint32_t bufferSize);
 		void Disconnect();
-		bool PollMessage(std::vector<char>& outMessage);
+		std::vector<std::vector<char>> PollMessages();
 
 		Status GetStatus() const { return m_Status.load(std::memory_order_acquire); }
 
@@ -40,7 +40,7 @@ namespace RamenNetworking
 		std::thread m_NetworkThread{};
 		Address m_ServerAddress{};
 
-		std::queue<std::vector<char>> m_MessageQueue{};
+		std::deque<std::vector<char>> m_MessageQueue{};
 		std::mutex m_MessageQueueMutex;
 
 		std::atomic<bool> m_IsRunning = false; // IsRunning is set by main thread

@@ -3,6 +3,8 @@
 #include <thread>
 #include <queue>
 #include <atomic>
+#include <mutex>
+
 #include "Networking/ClientSocket.h"
 
 namespace RamenNetworking
@@ -11,6 +13,7 @@ namespace RamenNetworking
 	{
 	public:
 		enum class Status { Disconnected, ConnectingToServer, Connected, Disconnecting };
+
 	public:
 		Client();
 		~Client();
@@ -22,23 +25,25 @@ namespace RamenNetworking
 		void ConnectToServer(const Address& serverAddress);
 		Result SendMessageToServer(char* buffer, uint32_t bufferSize);
 		void Disconnect();
+		bool PollMessage(std::vector<char>& outMessage);
 
-		std::queue<std::vector<char>>& GetMessageQueue() { return m_MessageQueue;  }
 		Status GetStatus() const { return m_Status.load(std::memory_order_acquire); }
 
 	private:
 		void NetworkLoop();
 
 	private:
+		// TEMP
+		static constexpr uint32_t MSG_SIZE = 1024;
+
 		ClientSocket m_Socket{};
 		std::thread m_NetworkThread{};
 		Address m_ServerAddress{};
 
-		// TEMP: This should be thread safe
 		std::queue<std::vector<char>> m_MessageQueue{};
-		std::atomic<bool> m_IsRunning = false;
+		std::mutex m_MessageQueueMutex;
 
-		// Status is set by network thread
-		std::atomic<Status> m_Status = Status::Disconnected;
+		std::atomic<bool> m_IsRunning = false; // IsRunning is set by main thread
+		std::atomic<Status> m_Status = Status::Disconnected; // Status is set by network thread
 	};
 }

@@ -35,12 +35,9 @@ int main()
 			break;
 		}
 		
-		auto& messageQueue = client.GetMessageQueue();
-		while (!messageQueue.empty())
+		std::vector<char> message;
+		while (client.PollMessage(message))
 		{
-			auto message = messageQueue.front();
-			messageQueue.pop();
-
 			std::cout << "Received: " << std::string(message.data()) << "\n";
 		}
 	}

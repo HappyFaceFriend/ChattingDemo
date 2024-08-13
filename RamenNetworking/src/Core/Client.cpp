@@ -66,8 +66,7 @@ namespace RamenNetworking
 	void Client::NetworkLoop()
 	{
 		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
-		// TEMP
-		constexpr uint32_t MSG_SIZE = 1024;
+
 		std::vector<char> messageBuffer(MSG_SIZE);
 
 		// Make Connection with server
@@ -80,11 +79,14 @@ namespace RamenNetworking
 		}
 
 		m_Status.store(Status::Connected, std::memory_order_release);
+
+		// Recieve datas
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{
 			result = m_Socket.Recv(messageBuffer.data(), MSG_SIZE);
 			if (result == Result::Success)
 			{
+				std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
 				m_MessageQueue.push(messageBuffer);
 			}
 			else
@@ -94,5 +96,18 @@ namespace RamenNetworking
 			}
 		}
 		m_Status.store(Status::Disconnected, std::memory_order_release);
+	}
+	bool Client::PollMessage(std::vector<char>& outMessage)
+	{
+		std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
+
+		if (m_MessageQueue.empty())
+			return false;
+		else
+		{
+			outMessage = std::move(m_MessageQueue.front());
+			m_MessageQueue.pop();
+			return true;
+		}
 	}
 }

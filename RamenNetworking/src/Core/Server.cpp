@@ -50,21 +50,24 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	void Server::StartListening()
+	void Server::StartListening(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
 		ASSERT(m_Socket.IsValid());
 
+		m_ClientAcceptedCallback = clientAcceptedCallback;
+
 		m_IsListening = true;
-		m_ListenThread = std::thread([this]() { ListenThreadFunc(); });
+		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientAcceptedCallback); });
 
 		m_IsRecieving = true;
 		m_RecieveThread = std::thread([this]() { RecieveThreadFunc(); });
 	}
-	void Server::ListenThreadFunc()
+	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
 		m_Socket.Listen(10);
 		while (m_IsListening)
 		{
+			RNET_LOG("Listening..");
 			auto& clientInfo = m_Socket.Accept();
 			if (!clientInfo.clientSocket.IsValid())
 			{
@@ -72,15 +75,19 @@ namespace RamenNetworking
 			}
 			else
 			{
-				m_ClientInfos.emplace_back(std::move(clientInfo.clientSocket), std::move(clientInfo.clientAddress));
+				RNET_LOG("Accepting a client.");
+				std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
+				auto clientAddress = clientInfo.clientAddress;
+				m_ClientInfos.emplace_back(std::move(clientInfo.clientSocket),std::move(clientInfo.clientAddress));
+				m_ClientAcceptedCallback(clientAddress);
 			}
 		}
 	}
 	void Server::RecieveThreadFunc()
 	{
-
 		while (m_IsRecieving)
 		{
+			std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 			for (auto& [clientSocket, clientAddress] : m_ClientInfos)
 			{
 				std::vector<char> messageBuffer(m_MessageSize);
@@ -108,6 +115,7 @@ namespace RamenNetworking
 	}
 	Result Server::SendMessageToAllClients(char* buffer, uint32_t bufferSize)
 	{
+		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 		for (auto& [clientSocket, clientAddress] : m_ClientInfos)
 		{
 			auto result = clientSocket.Send(buffer, bufferSize);

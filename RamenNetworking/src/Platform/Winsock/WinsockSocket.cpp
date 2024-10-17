@@ -9,7 +9,7 @@ namespace RamenNetworking
 		:m_RawSocket(INVALID_SOCKET)
 	{
 	}
-
+	
 	Socket::Socket(RawSocketType rawSocket)
 		:m_RawSocket(rawSocket)
 	{

@@ -11,12 +11,13 @@ int main()
 {
 	std::string serverIP = SERVER_IP_ADDRESS;
 	unsigned short serverPort = SERVER_PORT;
+#if 0
 	std::cout << "CHATTING DEMO - CLIENT\n";
 	std::cout << "Enter server IP: ";
 	std::cin >> serverIP;
 	std::cout << "Enter server Port: ";
 	std::cin >> serverPort;
-
+#endif
 	RamenNetworking::Client client;
 	client.Init();
 

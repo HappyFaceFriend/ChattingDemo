@@ -73,7 +73,6 @@ namespace RamenNetworking
 	{
 		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
 
-		std::vector<char> messageBuffer(m_MessageSize);
 
 		// Make Connection with server
 		auto result = m_Socket.Connect({ m_ServerAddress.IPAddress, m_ServerAddress.PortNumber });
@@ -89,6 +88,7 @@ namespace RamenNetworking
 		// Recieve datas
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{
+			std::vector<char> messageBuffer(m_MessageSize);
 			result = m_Socket.Recv(messageBuffer.data(), m_MessageSize);
 			if (result == Result::Success)
 			{

@@ -23,7 +23,9 @@ int main()
 		return 1;
 	}
 
-	server.StartListening();
+	server.StartListening([](RamenNetworking::Address& clientAddress) {
+		std::cout << "Client connected: " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
+		});
 
 	while (true)
 	{

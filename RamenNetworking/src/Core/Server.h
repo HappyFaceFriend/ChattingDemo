@@ -2,6 +2,8 @@
 
 #include <thread>
 #include <queue>
+#include <shared_mutex>
+#include <functional>
 
 #include "Defs.h"
 #include "Networking/ServerSocket.h"
@@ -12,6 +14,8 @@ namespace RamenNetworking
 	class Server
 	{
 	public:
+		using ClientAcceptedCallback = std::function<void(Address)>;
+	public:
 		Server(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
 		~Server();
 
@@ -19,7 +23,7 @@ namespace RamenNetworking
 		Server& operator=(const Server&) = delete;
 
 		Result Init(const Address& serverAddress);
-		void StartListening();
+		void StartListening(const ClientAcceptedCallback& clientAcceptedCallback);
 		Result SendMessageToAllClients(char* buffer, uint32_t bufferSize = DEFAULT_MESSAGE_SIZE);
 
 		bool TryPollMessage(std::vector<char>& message);
@@ -30,11 +34,11 @@ namespace RamenNetworking
 			ClientSocket socket;
 			Address address;
 			
-			ClientInfo(ClientSocket&& socket, Address&& address) : socket(std::move(socket)), address(std::move(address)){}
+			ClientInfo(ClientSocket&& socket, Address&& address) : socket(std::move(socket)), address(std::move(address)) {}
 		};
 
 	private:
-		void ListenThreadFunc();
+		void ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback);
 		void RecieveThreadFunc();
 
 	private:
@@ -47,8 +51,11 @@ namespace RamenNetworking
 		std::thread m_RecieveThread{};
 		Address m_ServerAddress{};
 
+		ClientAcceptedCallback m_ClientAcceptedCallback;
+
 		// TEMP: This should be thread safe
 		std::vector<ClientInfo> m_ClientInfos{};
+		std::shared_mutex m_ClientInfosLock;
 		// TODO: This should be thread safe
 		bool m_IsListening = false;
 		bool m_IsRecieving = false;

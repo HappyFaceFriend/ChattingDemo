@@ -13,7 +13,7 @@ namespace RamenNetworking
 	{
 	public:
 		MessageQueue(size_t maxElementCount)
-			: m_Capacity(maxElementCount + 1), m_Buffer((T*)malloc((maxElementCount + 1) * sizeof(T)))
+			: m_Capacity(maxElementCount + 1), m_Buffer(new T[maxElementCount + 1])
 		{
 		}
 		MessageQueue(const MessageQueue&) = delete;
@@ -23,7 +23,7 @@ namespace RamenNetworking
 
 		~MessageQueue()
 		{
-			free(m_Buffer);
+			delete[] m_Buffer;
 		}
 
 		// TODO
@@ -39,15 +39,7 @@ namespace RamenNetworking
 				// Queue is full
 				return false;
 			}
-			try
-			{
-				m_Buffer[pushIndex] = element; // No move to isolate the issue
-			}
-			catch (const std::exception& e)
-			{
-				RNET_LOG("Error inserting element: {0}", e.what());
-				return false;
-			}
+			m_Buffer[pushIndex] = std::move(element);
 			m_PushIndex.store((pushIndex + 1) % m_Capacity, std::memory_order_release);
 			return true;
 		}
@@ -61,15 +53,7 @@ namespace RamenNetworking
 				// Queue is full
 				return false;
 			}
-			try
-			{
-				m_Buffer[pushIndex] = element; // No move to isolate the issue
-			}
-			catch (const std::exception& e)
-			{
-				RNET_LOG("Error inserting element: {0}", e.what());
-				return false;
-			}
+			m_Buffer[pushIndex] = element;
 			m_PushIndex.store((pushIndex + 1) % m_Capacity, std::memory_order_release);
 			return true;
 		}

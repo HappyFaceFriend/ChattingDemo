@@ -16,6 +16,9 @@
     <Filter Include="Platform\Winsock">
       <UniqueIdentifier>{7732E01A-632B-FF6C-8C5D-E4F178B5DE78}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{010A8043-6D74-34BA-B6B2-E55F225C120F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Core\Client.h">
@@ -50,8 +53,10 @@
       <Filter>Platform\Winsock</Filter>
     </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
+    <ClInclude Include="src\Utilities\MessageQueue.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
     <ClInclude Include="src\pch.h" />
-    <ClInclude Include="src\Utilities\MessageQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Client.cpp">
@@ -78,7 +83,9 @@
     <ClCompile Include="src\Platform\Winsock\WinsockSocket.cpp">
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utilities\MessageQueue.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
     <ClCompile Include="src\pch.cpp" />
-    <ClCompile Include="src\Utilities\MessageQueue.cpp" />
   </ItemGroup>
 </Project>

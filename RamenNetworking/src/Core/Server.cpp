@@ -7,7 +7,8 @@
 
 namespace RamenNetworking
 {
-	Server::Server()
+	Server::Server(size_t messageSize, size_t messageQueueSize)
+		:m_MessageSize(messageSize), m_MessageQueueSize(messageQueueSize), m_MessageQueue(messageQueueSize)
 	{
 	}
 
@@ -77,18 +78,18 @@ namespace RamenNetworking
 	}
 	void Server::RecieveThreadFunc()
 	{
-		// TEMP
-		constexpr uint32_t MSG_SIZE = 1024;
-		std::vector<char> messageBuffer(MSG_SIZE);
 
 		while (m_IsRecieving)
 		{
 			for (auto& [clientSocket, clientAddress] : m_ClientInfos)
 			{
-				auto result = clientSocket.Recv(messageBuffer.data(), MSG_SIZE);
+				std::vector<char> messageBuffer(m_MessageSize);
+				auto result = clientSocket.Recv(messageBuffer.data(), m_MessageSize);
 				if (result == Result::Success)
 				{
-					m_MessageQueue.push(messageBuffer);
+					auto pushResult = m_MessageQueue.TryPush((messageBuffer));
+					if (!pushResult)
+						RNET_LOG_WARN("Message is dropped because message queue was full.");
 				}
 				else
 				{
@@ -119,5 +120,10 @@ namespace RamenNetworking
 		}
 		// TODO: Change return type to know each result
 		return Result::Success;
+	}
+	bool Server::TryPollMessage(std::vector<char>& message)
+	{
+		auto result = m_MessageQueue.TryPop(message);
+		return result;
 	}
 }

@@ -51,6 +51,7 @@
     </ClInclude>
     <ClInclude Include="src\RamenNetworking.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\Utilities\MessageQueue.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Core\Client.cpp">
@@ -78,5 +79,6 @@
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\Utilities\MessageQueue.cpp" />
   </ItemGroup>
 </Project>

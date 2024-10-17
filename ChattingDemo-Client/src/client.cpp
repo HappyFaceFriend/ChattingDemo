@@ -11,6 +11,7 @@ int main()
 {
 	std::string serverIP = SERVER_IP_ADDRESS;
 	unsigned short serverPort = SERVER_PORT;
+	std::cout << "CHATTING DEMO - CLIENT\n";
 	std::cout << "Enter server IP: ";
 	std::cin >> serverIP;
 	std::cout << "Enter server Port: ";
@@ -34,10 +35,11 @@ int main()
 		{
 			break;
 		}
-		
-		auto messages = client.PollMessages();
-		for(auto& message : messages)
+		while (true)
 		{
+			std::vector<char> message;
+			if (!client.TryPollMessage(message))
+				break;
 			std::cout << "Received: " << std::string(message.data()) << "\n";
 		}
 	}

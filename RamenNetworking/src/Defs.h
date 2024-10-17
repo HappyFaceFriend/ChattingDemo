@@ -13,3 +13,11 @@
 	#define ASSERT(validation)
 	#define RNET_ASSERT(validation, ...)
 #endif //ifdef RNET_ENABLE_ASSERTS else
+
+
+#include <cstdint>
+namespace RamenNetworking
+{
+	inline constexpr size_t DEFAULT_MESSAGE_SIZE = 1024;
+	inline constexpr size_t DEFAULT_MESSAGE_QUEUE_SIZE = 32;
+}

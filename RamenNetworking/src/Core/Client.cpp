@@ -5,7 +5,8 @@
 
 namespace RamenNetworking
 {
-	Client::Client()
+	Client::Client(size_t messageSize, size_t messageQueueSize)
+		:m_MessageSize(messageSize), m_MessageQueueSize(messageQueueSize), m_MessageQueue(messageQueueSize)
 	{
 	}
 
@@ -63,11 +64,16 @@ namespace RamenNetworking
 		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
 		m_NetworkThread.join();
 	}
+	bool Client::TryPollMessage(std::vector<char>& message)
+	{
+		auto result = m_MessageQueue.TryPop(message);
+		return result;
+	}
 	void Client::NetworkLoop()
 	{
 		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
 
-		std::vector<char> messageBuffer(MSG_SIZE);
+		std::vector<char> messageBuffer(m_MessageSize);
 
 		// Make Connection with server
 		auto result = m_Socket.Connect({ m_ServerAddress.IPAddress, m_ServerAddress.PortNumber });
@@ -83,11 +89,12 @@ namespace RamenNetworking
 		// Recieve datas
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{
-			result = m_Socket.Recv(messageBuffer.data(), MSG_SIZE);
+			result = m_Socket.Recv(messageBuffer.data(), m_MessageSize);
 			if (result == Result::Success)
 			{
-				std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
-				m_MessageQueue.push_back(messageBuffer);
+				auto pushResult = m_MessageQueue.TryPush(std::move(messageBuffer));
+				if (!pushResult)
+					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
 			else
 			{
@@ -97,17 +104,5 @@ namespace RamenNetworking
 		}
 		m_Status.store(Status::Disconnected, std::memory_order_release);
 	}
-	std::vector<std::vector<char>> Client::PollMessages()
-	{
-		std::lock_guard<std::mutex> messageQueueLock(m_MessageQueueMutex);
 
-		if (m_MessageQueue.empty())
-			return {};
-
-		auto messages = std::vector<std::vector<char>>(std::make_move_iterator(m_MessageQueue.begin()),
-												std::make_move_iterator(m_MessageQueue.end()));
-		m_MessageQueue.clear();
-
-		return messages;
-	}
 }

@@ -29,18 +29,23 @@ int main()
 
 	while (true)
 	{
-		std::vector<char> message;
+		RamenNetworking::Server::Message message;
 		auto hasMessage = server.TryPollMessage(message);
 
 		if (hasMessage)
 		{
-			std::cout << "Received: " << std::string(message.data()) << "\n";
-			if (strcmp(message.data(), "QUIT"))
+			std::cout << "Received from client" << message.id << ": " << message.message << "\n";
+			if (strcmp(message.message.c_str(), "QUIT") == 0)
 			{
-				// TODO: Disconnect
-				std::cout << "TODO: Disconnect this client\n";
+				server.DisconnectClient(message.id);
+				std::cout << "Disconnected " << message.id << "\n";
+				continue;
 			}
-			server.SendMessageToAllClients(message.data());
+			else
+			{
+				std::cout << "Broadcasting: " << message.message << "\n";
+				server.SendMessageToAllClients(message.message.c_str());
+			}
 		}
 	}
 	return 0;

@@ -30,7 +30,7 @@ int main()
 		std::cout << "Enter Message (QUIT to quit): ";
 		std::cin >> msgBuffer;
 
-		client.SendMessageToServer(msgBuffer, sizeof(msgBuffer));
+		client.SendMessageToServer(msgBuffer, sizeof(msgBuffer+1));
 		
 		if (strcmp(msgBuffer, "QUIT") == 0)
 		{

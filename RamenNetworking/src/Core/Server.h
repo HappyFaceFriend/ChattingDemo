@@ -16,6 +16,13 @@ namespace RamenNetworking
 	public:
 		using ClientID = uint32_t;
 		using ClientAcceptedCallback = std::function<void(Address, ClientID)>;
+
+		// Mabye this should contain more information
+		struct Message
+		{
+			ClientID id;
+			std::string message;
+		};
 	public:
 		Server(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
 		~Server();
@@ -25,10 +32,10 @@ namespace RamenNetworking
 
 		Result Init(const Address& serverAddress);
 		void StartListening(const ClientAcceptedCallback& clientAcceptedCallback);
-		Result SendMessageToAllClients(char* buffer, uint32_t bufferSize = DEFAULT_MESSAGE_SIZE);
+		Result SendMessageToAllClients(const char* buffer, uint32_t bufferSize = DEFAULT_MESSAGE_SIZE);
 
-		bool TryPollMessage(std::vector<char>& message);
-
+		bool TryPollMessage(Message& message);
+		void DisconnectClient(ClientID clientID);
 	private:
 		struct ClientInfo
 		{
@@ -41,14 +48,13 @@ namespace RamenNetworking
 	private:
 		void ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback);
 		void RecieveFromClientThreadFunc(ClientID clientID);
-		void DisconnectClient(ClientInfo& clientInfo);
 
 	private:
 		static ClientID s_NextClientID;
 
 		const size_t m_MessageSize;
 		size_t m_MessageQueueSize; // This is not const because this might provide resizing methods in the future.
-		MessageQueue<std::vector<char>> m_MessageQueue;
+		MessageQueue<Message> m_MessageQueue;
 
 		ServerSocket m_Socket{};
 		Address m_ServerAddress{};

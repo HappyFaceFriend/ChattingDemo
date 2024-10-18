@@ -19,7 +19,7 @@ namespace RamenNetworking
 		m_IsListening = false;
 		m_ListenThread.join();
 		for (auto& [clientID, clientInfo] : m_ClientInfos)
-			DisconnectClient(clientInfo);
+			DisconnectClient(clientID);
 		for(auto& [clientID, clientThread] : m_ClientThreads)
 			clientThread.join();
 	}
@@ -98,24 +98,26 @@ namespace RamenNetworking
 		auto& clientInfo = m_ClientInfos[clientID];
 		while (clientInfo.isConnected)
 		{
-			std::vector<char> messageBuffer(m_MessageSize);
-			auto result = clientInfo.socket.Recv(messageBuffer.data(), m_MessageSize);
+			char messageBuffer[1024] = "";
+			auto result = clientInfo.socket.Recv(messageBuffer, m_MessageSize);
  			if (result == Result::Success)
 			{
 				// TEMP: Message should be a struct and contain id information
-				auto pushResult = m_MessageQueue.TryPush((messageBuffer));
+				auto pushResult = m_MessageQueue.TryPush(Message{ clientID, messageBuffer });
 				if (!pushResult)
 					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
 			else
 			{
 				RNET_LOG_ERROR("Error reading data from {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
-				DisconnectClient(clientInfo);
+				DisconnectClient(clientID);
 				break;
 			}
 		}
+		m_ClientThreads.erase(clientID);
+		m_ClientInfos.erase(clientID);
 	}
-	Result Server::SendMessageToAllClients(char* buffer, uint32_t bufferSize)
+	Result Server::SendMessageToAllClients(const char* buffer, uint32_t bufferSize)
 	{
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 		for (auto& [clientID, clientInfo] : m_ClientInfos)
@@ -124,21 +126,19 @@ namespace RamenNetworking
 			if (result == Result::Fail)
 			{
 				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
-				DisconnectClient(clientInfo);
+				DisconnectClient(clientID);
 			}
 		}
 		// TODO: Change return type to know each result
 		return Result::Success;
 	}
-	bool Server::TryPollMessage(std::vector<char>& message)
+	bool Server::TryPollMessage(Message& message)
 	{
 		auto result = m_MessageQueue.TryPop(message);
 		return result;
 	}
-
-	void Server::DisconnectClient(ClientInfo& clientInfo)
+	void Server::DisconnectClient(ClientID clientID)
 	{
-		// TODO: Implment this
-		clientInfo.isConnected = false;
+		m_ClientInfos[clientID].isConnected = false;
 	}
 }

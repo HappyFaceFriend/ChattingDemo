@@ -33,6 +33,17 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
+	Result Socket::SetTimeout(uint32_t milliseconds)
+	{
+		if (setsockopt(m_RawSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&milliseconds, sizeof(milliseconds)) == SOCKET_ERROR)
+		{
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Error setting receive timeout. WSAErrorCode: {0}", errorCode);
+			return Result::Fail;
+		}
+		return Result::Success;
+	}
+
 	bool Socket::IsValid() const
 	{ 
 		return m_RawSocket != INVALID_SOCKET;

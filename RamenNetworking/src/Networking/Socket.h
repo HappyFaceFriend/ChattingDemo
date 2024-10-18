@@ -28,6 +28,7 @@ namespace RamenNetworking
 		bool IsValid() const;
 		void Close();
 
+		Result SetTimeout(uint32_t milliseconds);
 		// TODO : Change these to take in RamenNetworking::Buffer or something ?
 		Result Recv(char* buffer, uint32_t bufferSize);
 		Result Send(const char* buffer, uint32_t msgSize);

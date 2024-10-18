@@ -7,6 +7,8 @@
 
 namespace RamenNetworking
 {
+	Server::ClientID Server::s_NextClientID = 0;
+
 	Server::Server(size_t messageSize, size_t messageQueueSize)
 		:m_MessageSize(messageSize), m_MessageQueueSize(messageQueueSize), m_MessageQueue(messageQueueSize)
 	{
@@ -15,9 +17,11 @@ namespace RamenNetworking
 	Server::~Server()
 	{
 		m_IsListening = false;
-		m_IsRecieving = false;
 		m_ListenThread.join();
-		m_RecieveThread.join();
+		for (auto& [clientID, clientInfo] : m_ClientInfos)
+			DisconnectClient(clientInfo);
+		for(auto& [clientID, clientThread] : m_ClientThreads)
+			clientThread.join();
 	}
 
 	Result Server::Init(const Address& serverAddress)
@@ -59,8 +63,6 @@ namespace RamenNetworking
 		m_IsListening = true;
 		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientAcceptedCallback); });
 
-		m_IsRecieving = true;
-		m_RecieveThread = std::thread([this]() { RecieveThreadFunc(); });
 	}
 	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
@@ -77,53 +79,52 @@ namespace RamenNetworking
 			{
 				RNET_LOG("Accepting a client.");
 				std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
-				auto clientAddress = clientInfo.clientAddress;
-				m_ClientInfos.emplace_back(std::move(clientInfo.clientSocket),std::move(clientInfo.clientAddress));
-				m_ClientAcceptedCallback(clientAddress);
+
+				auto clientID = s_NextClientID++;
+				m_ClientInfos[clientID] = {
+					clientID,
+					std::move(clientInfo.clientSocket),
+					clientInfo.clientAddress,
+					true
+				};
+				m_ClientThreads[clientID] = std::thread([this, clientID = clientID]() { RecieveFromClientThreadFunc(clientID); });
+
+				m_ClientAcceptedCallback(clientInfo.clientAddress, clientID);
 			}
 		}
 	}
-	void Server::RecieveThreadFunc()
+	void Server::RecieveFromClientThreadFunc(ClientID clientID)
 	{
-		while (m_IsRecieving)
+		auto& clientInfo = m_ClientInfos[clientID];
+		while (clientInfo.isConnected)
 		{
-			std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
-			for (auto& [clientSocket, clientAddress] : m_ClientInfos)
+			std::vector<char> messageBuffer(m_MessageSize);
+			auto result = clientInfo.socket.Recv(messageBuffer.data(), m_MessageSize);
+ 			if (result == Result::Success)
 			{
-				std::vector<char> messageBuffer(m_MessageSize);
-				auto result = clientSocket.Recv(messageBuffer.data(), m_MessageSize);
-				if (result == Result::Success)
-				{
-					auto pushResult = m_MessageQueue.TryPush((messageBuffer));
-					if (!pushResult)
-						RNET_LOG_WARN("Message is dropped because message queue was full.");
-				}
-				else
-				{
-					RNET_LOG_ERROR("Error reading data from {0}:{1}", clientAddress.IPAddress, clientAddress.PortNumber);
-					// TODO : Removing a client should be seperate function
-					//clientSocket.Close();
-				}
+				// TEMP: Message should be a struct and contain id information
+				auto pushResult = m_MessageQueue.TryPush((messageBuffer));
+				if (!pushResult)
+					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
-
-			// Remove all clients with invalid socket
-			/*m_ClientInfos.erase(
-				std::remove_if(m_ClientInfos.begin(), m_ClientInfos.end(), [](ClientInfo& info) { return !info.socket.IsValid(); }),
-				m_ClientInfos.end()
-			);*/
+			else
+			{
+				RNET_LOG_ERROR("Error reading data from {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
+				DisconnectClient(clientInfo);
+				break;
+			}
 		}
 	}
 	Result Server::SendMessageToAllClients(char* buffer, uint32_t bufferSize)
 	{
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
-		for (auto& [clientSocket, clientAddress] : m_ClientInfos)
+		for (auto& [clientID, clientInfo] : m_ClientInfos)
 		{
-			auto result = clientSocket.Send(buffer, bufferSize);
+			auto result = clientInfo.socket.Send(buffer, bufferSize);
 			if (result == Result::Fail)
 			{
-				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientAddress.IPAddress, clientAddress.PortNumber);
-				// TODO : Removing a client should be seperate function
-				clientSocket.Close();
+				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
+				DisconnectClient(clientInfo);
 			}
 		}
 		// TODO: Change return type to know each result
@@ -133,5 +134,11 @@ namespace RamenNetworking
 	{
 		auto result = m_MessageQueue.TryPop(message);
 		return result;
+	}
+
+	void Server::DisconnectClient(ClientInfo& clientInfo)
+	{
+		// TODO: Implment this
+		clientInfo.isConnected = false;
 	}
 }

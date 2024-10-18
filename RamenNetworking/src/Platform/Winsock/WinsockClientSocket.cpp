@@ -17,6 +17,7 @@ namespace RamenNetworking
 	{
 	}
 
+
 	ClientSocket::ClientSocket(ClientSocket&& other) noexcept
 	{
 		m_RawSocket = other.m_RawSocket;

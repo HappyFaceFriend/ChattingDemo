@@ -23,8 +23,8 @@ int main()
 		return 1;
 	}
 
-	server.StartListening([](RamenNetworking::Address& clientAddress) {
-		std::cout << "Client connected: " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
+	server.StartListening([](RamenNetworking::Address& clientAddress, RamenNetworking::Server::ClientID clientID) {
+		std::cout << "Client " << clientID << " connected - " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
 		});
 
 	while (true)
@@ -35,6 +35,11 @@ int main()
 		if (hasMessage)
 		{
 			std::cout << "Received: " << std::string(message.data()) << "\n";
+			if (strcmp(message.data(), "QUIT"))
+			{
+				// TODO: Disconnect
+				std::cout << "TODO: Disconnect this client\n";
+			}
 			server.SendMessageToAllClients(message.data());
 		}
 	}

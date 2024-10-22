@@ -37,13 +37,7 @@
     <ClInclude Include="src\Networking\Address.h">
       <Filter>Networking</Filter>
     </ClInclude>
-    <ClInclude Include="src\Networking\ClientSocket.h">
-      <Filter>Networking</Filter>
-    </ClInclude>
     <ClInclude Include="src\Networking\NetworkAPI.h">
-      <Filter>Networking</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Networking\ServerSocket.h">
       <Filter>Networking</Filter>
     </ClInclude>
     <ClInclude Include="src\Networking\Socket.h">
@@ -71,13 +65,7 @@
     <ClCompile Include="src\Networking\NetworkAPI.cpp">
       <Filter>Networking</Filter>
     </ClCompile>
-    <ClCompile Include="src\Platform\Winsock\WinsockClientSocket.cpp">
-      <Filter>Platform\Winsock</Filter>
-    </ClCompile>
     <ClCompile Include="src\Platform\Winsock\WinsockNetworkAPI.cpp">
-      <Filter>Platform\Winsock</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Platform\Winsock\WinsockServerSocket.cpp">
       <Filter>Platform\Winsock</Filter>
     </ClCompile>
     <ClCompile Include="src\Platform\Winsock\WinsockSocket.cpp">

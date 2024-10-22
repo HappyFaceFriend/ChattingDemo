@@ -37,14 +37,14 @@ namespace RamenNetworking
 			return Result::Fail;
 		}
 
-		auto result = m_Socket.Init();
+		auto result = m_ServerSocket.Init();
 		if (result == Result::Fail)
 		{
 			RNET_LOG_ERROR("Failed socket initialization.");
 			return Result::Fail;
 		}
 
-		m_Socket.Bind(m_ServerAddress);
+		m_ServerSocket.Bind(m_ServerAddress);
 		if (result == Result::Fail)
 		{
 			RNET_LOG_ERROR("Failed to bind address to socket.");
@@ -56,7 +56,7 @@ namespace RamenNetworking
 
 	void Server::StartListening(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
-		ASSERT(m_Socket.IsValid());
+		ASSERT(m_ServerSocket.IsValid());
 
 		m_ClientAcceptedCallback = clientAcceptedCallback;
 
@@ -66,11 +66,11 @@ namespace RamenNetworking
 	}
 	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
-		m_Socket.Listen(10);
+		m_ServerSocket.Listen(10);
 		while (m_IsListening)
 		{
 			RNET_LOG("Listening..");
-			auto& clientInfo = m_Socket.Accept();
+			auto& clientInfo = m_ServerSocket.Accept();
 			if (!clientInfo.clientSocket.IsValid())
 			{
 				RNET_LOG_ERROR("Accepting a client failed.");
@@ -99,7 +99,7 @@ namespace RamenNetworking
 		while (clientInfo.isConnected)
 		{
 			char messageBuffer[1024] = "";
-			auto result = clientInfo.socket.Recv(messageBuffer, m_MessageSize);
+			auto result = clientInfo.clientSocket.Recv(messageBuffer, m_MessageSize);
  			if (result == Result::Success)
 			{
 				// TEMP: Message should be a struct and contain id information
@@ -122,7 +122,7 @@ namespace RamenNetworking
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 		for (auto& [clientID, clientInfo] : m_ClientInfos)
 		{
-			auto result = clientInfo.socket.Send(buffer, bufferSize);
+			auto result = clientInfo.clientSocket.Send(buffer, bufferSize);
 			if (result == Result::Fail)
 			{
 				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);

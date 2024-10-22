@@ -6,7 +6,7 @@
 #include <functional>
 
 #include "Defs.h"
-#include "Networking/ServerSocket.h"
+#include "Networking/Socket.h"
 #include "Utilities/MessageQueue.h"
 
 namespace RamenNetworking
@@ -40,7 +40,7 @@ namespace RamenNetworking
 		struct ClientInfo
 		{
 			ClientID id; // Mabye use GUID
-			ClientSocket socket;
+			Socket clientSocket;
 			Address address;
 			bool isConnected = true; // TODO: Use enum to manage client state
 		};
@@ -56,7 +56,7 @@ namespace RamenNetworking
 		size_t m_MessageQueueSize; // This is not const because this might provide resizing methods in the future.
 		MessageQueue<Message> m_MessageQueue;
 
-		ServerSocket m_Socket{};
+		Socket m_ServerSocket{};
 		Address m_ServerAddress{};
 		std::thread m_ListenThread{};
 		

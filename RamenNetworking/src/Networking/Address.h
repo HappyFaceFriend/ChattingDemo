@@ -9,4 +9,5 @@ namespace RamenNetworking
 		std::string IPAddress;
 		uint16_t PortNumber;
 	};
+
 }

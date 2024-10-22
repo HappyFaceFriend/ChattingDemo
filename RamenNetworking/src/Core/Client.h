@@ -4,7 +4,7 @@
 #include <queue>
 #include <atomic>
 
-#include "Networking/ClientSocket.h"
+#include "Networking/Socket.h"
 #include "Utilities/MessageQueue.h"
 #include "Defs.h"
 
@@ -40,7 +40,7 @@ namespace RamenNetworking
 		size_t m_MessageQueueSize; // This is not const because this might provide resizing methods in the future.
 		MessageQueue<std::vector<char>> m_MessageQueue;
 
-		ClientSocket m_Socket{};
+		Socket m_Socket{};
 		std::thread m_NetworkThread{};
 		Address m_ServerAddress{};
 

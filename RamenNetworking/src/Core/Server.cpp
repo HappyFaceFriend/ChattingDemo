@@ -18,10 +18,12 @@ namespace RamenNetworking
 	{
 		m_IsListening = false;
 		m_ListenThread.join();
-		for (auto& [clientID, clientInfo] : m_ClientInfos)
+		for (auto& [clientID, connection] : m_ClientConnections)
 			DisconnectClient(clientID);
-		for(auto& [clientID, clientThread] : m_ClientThreads)
-			clientThread.join();
+		for (auto& [clientID, connection] : m_ClientConnections)
+		{
+			connection.clientThread.join();
+		}
 	}
 
 	Result Server::Init(const Address& serverAddress)
@@ -63,6 +65,41 @@ namespace RamenNetworking
 		m_IsListening = true;
 		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientAcceptedCallback); });
 
+		m_IsRunning.store(true, std::memory_order_relaxed);
+		m_MainNetworkThread = std::thread([this]() { MainNetworkThreadFunc(); });
+	}
+
+	void Server::MainNetworkThreadFunc()
+	{
+		std::vector<ClientID> clientsToRemove;
+		while (m_IsRunning.load(std::memory_order_acquire))
+		{
+			// TEMP
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+			// Disconnect clients
+			{
+				std::shared_lock<std::shared_mutex> readLock(m_ClientInfosLock);
+				for (auto& [clientID, connection] : m_ClientConnections)
+				{
+					if (connection.isThreadDone)
+					{
+						connection.clientThread.join();
+						clientsToRemove.push_back(clientID);
+					}
+				}
+			}
+			if (!clientsToRemove.empty())
+			{
+				std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
+				for (auto clientID : clientsToRemove)
+				{
+					m_ClientConnections.erase(clientID);
+				}
+				clientsToRemove.clear();
+			}
+		}
+
 	}
 	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
@@ -81,13 +118,12 @@ namespace RamenNetworking
 				std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
 
 				auto clientID = s_NextClientID++;
-				m_ClientInfos[clientID] = {
+				m_ClientConnections[clientID] = {
 					clientID,
 					std::move(clientInfo.clientSocket),
 					clientInfo.clientAddress,
-					true
+					std::thread([this, clientID = clientID]() { RecieveFromClientThreadFunc(clientID); })
 				};
-				m_ClientThreads[clientID] = std::thread([this, clientID = clientID]() { RecieveFromClientThreadFunc(clientID); });
 
 				m_ClientAcceptedCallback(clientInfo.clientAddress, clientID);
 			}
@@ -95,7 +131,7 @@ namespace RamenNetworking
 	}
 	void Server::RecieveFromClientThreadFunc(ClientID clientID)
 	{
-		auto& clientInfo = m_ClientInfos[clientID];
+		auto& clientInfo = m_ClientConnections[clientID];
 		// TEMP
 		uint32_t timeout = 10;
 		while (clientInfo.isConnected)
@@ -120,13 +156,7 @@ namespace RamenNetworking
 				break;
 			}
 		}
-
-		// Disconnect
-		{
-			std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
-			m_ClientThreads.erase(clientID); // TODO: This destroys current thread
-			m_ClientInfos.erase(clientID);
-		}
+		clientInfo.isThreadDone = true;
 	}
 
 	Result Server::SendMessageToAllClients(const char* buffer, uint32_t bufferSize)
@@ -134,7 +164,7 @@ namespace RamenNetworking
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 		// TEMP
 		uint32_t timeout = 10;
-		for (auto& [clientID, clientInfo] : m_ClientInfos)
+		for (auto& [clientID, clientInfo] : m_ClientConnections)
 		{
 			auto result = clientInfo.clientSocket.Send(buffer, bufferSize, timeout);
 			if (result == Socket::SendResult::Disconnected)
@@ -159,6 +189,6 @@ namespace RamenNetworking
 
 	void Server::DisconnectClient(ClientID clientID)
 	{
-		m_ClientInfos[clientID].isConnected = false;
+		m_ClientConnections[clientID].isConnected = false;
 	}
 }

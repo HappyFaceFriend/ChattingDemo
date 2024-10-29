@@ -36,18 +36,22 @@ namespace RamenNetworking
 
 		bool TryPollMessage(Message& message);
 		void DisconnectClient(ClientID clientID);
+
 	private:
-		struct ClientInfo
+		struct ClientConnection
 		{
 			ClientID id; // Mabye use GUID
 			Socket clientSocket;
 			Address address;
-			bool isConnected = true; // TODO: Use enum to manage client state
+			std::thread clientThread;
+			bool isConnected = true; // TODO: Use enum to manage client state, change to atomic
+			bool isThreadDone = false;
 		};
 
 	private:
 		void ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback);
 		void RecieveFromClientThreadFunc(ClientID clientID);
+		void MainNetworkThreadFunc();
 
 	private:
 		static ClientID s_NextClientID;
@@ -58,18 +62,18 @@ namespace RamenNetworking
 
 		Socket m_ServerSocket{};
 		Address m_ServerAddress{};
+		std::thread m_MainNetworkThread{};
 		std::thread m_ListenThread{};
 		
 		// TEMP
 		ClientAcceptedCallback m_ClientAcceptedCallback;
 
-		std::unordered_map<ClientID, ClientInfo> m_ClientInfos;
-		std::unordered_map<ClientID, std::thread> m_ClientThreads;
+		std::unordered_map<ClientID, ClientConnection> m_ClientConnections;
 		std::shared_mutex m_ClientInfosLock;
-
 
 
 		// TODO: This should be thread safe
 		bool m_IsListening = false;
+		std::atomic<bool> m_IsRunning = false;
 	};
 }

@@ -46,17 +46,6 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	Result Socket::SetTimeout(uint32_t milliseconds)
-	{
-		if (setsockopt(m_RawSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&milliseconds, sizeof(milliseconds)) == SOCKET_ERROR)
-		{
-			auto errorCode = WSAGetLastError();
-			RNET_LOG_ERROR("Error setting receive timeout. WSAErrorCode: {0}", errorCode);
-			return Result::Fail;
-		}
-		return Result::Success;
-	}
-
 	bool Socket::IsValid() const
 	{ 
 		return m_RawSocket != INVALID_SOCKET;
@@ -68,36 +57,85 @@ namespace RamenNetworking
 		m_RawSocket = INVALID_SOCKET;
 	}
 
-	Result Socket::Recv(char* buffer, uint32_t bufferLength)
+	Socket::RecieveResult Socket::RecieveNoTimeout(char* buffer, uint32_t bufferLength)
 	{
-		ASSERT(m_RawSocket != INVALID_SOCKET);
-		ASSERT(bufferLength <= std::numeric_limits<int>::max());
-		// TODO : Check if buffer length < length
-
-		auto msgLength = recv(m_RawSocket, buffer, bufferLength, 0);
-		if (msgLength < 0)
-		{
-			auto errorCode = WSAGetLastError();
-			RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
-			return Result::Fail;
-		}
-		return Result::Success;
+		return Recieve(buffer, bufferLength, 0);
 	}
 
-	Result Socket::Send(const char* buffer, uint32_t msgSize)
+	// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
+	Socket::RecieveResult Socket::Recieve(char* buffer, uint32_t bufferLength, uint32_t timeoutMilliseconds)
+	{
+		ASSERT(m_RawSocket != INVALID_SOCKET);
+		ASSERT(bufferLength > 0 && bufferLength <= std::numeric_limits<int>::max());
+
+		// Set timeout (setting to 0 will remove timeout)
+		if (setsockopt(m_RawSocket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutMilliseconds), sizeof(timeoutMilliseconds)) == SOCKET_ERROR)
+		{
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Error setting receive timeout. WSAErrorCode: {0}", errorCode);
+			return RecieveResult::Fail;
+		}
+
+		auto msgLength = recv(m_RawSocket, buffer, bufferLength, 0);
+		if (msgLength == 0)
+		{
+			return RecieveResult::Disconnected;
+		}
+		else if (msgLength < 0)
+		{
+			auto errorCode = WSAGetLastError();
+			if (errorCode == WSAETIMEDOUT)
+			{
+				return RecieveResult::Timedout;
+			}
+			else
+			{
+				RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
+				return RecieveResult::Fail;
+			}
+		}
+		return RecieveResult::Success;
+	}
+
+	Socket::SendResult Socket::SendNoTimeout(const char* buffer, uint32_t msgSize)
+	{
+		return Send(buffer, msgSize, 0);
+	}
+
+	// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
+	Socket::SendResult Socket::Send(const char* buffer, uint32_t msgSize, uint32_t timeoutMilliseconds)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(msgSize <= std::numeric_limits<int>::max());
 		// TODO : Check if buffer length >= length
 
+		// Set timeout (setting to 0 will remove timeout)
+		if (setsockopt(m_RawSocket, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&timeoutMilliseconds), sizeof(timeoutMilliseconds)) == SOCKET_ERROR)
+		{
+			auto errorCode = WSAGetLastError();
+			RNET_LOG_ERROR("Error setting receive timeout. WSAErrorCode: {0}", errorCode);
+			return SendResult::Fail;
+		}
+
 		auto sentLength = send(m_RawSocket, buffer, msgSize, 0);
+		if (sentLength == 0)
+		{
+			return SendResult::Disconnected;
+		}
 		if (sentLength < 0)
 		{
 			auto errorCode = WSAGetLastError();
-			RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
-			return Result::Fail;
+			if (errorCode == WSAETIMEDOUT)
+			{
+				return SendResult::Timedout;
+			}
+			else
+			{
+				RNET_LOG_ERROR("Failed to recieve data. WSAErrorCode: {0}", errorCode);
+				return SendResult::Fail;
+			}
 		}
-		return Result::Success;
+		return SendResult::Success;
 	}
 	Result Socket::Connect(const Address& serverAddress)
 	{

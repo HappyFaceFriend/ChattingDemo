@@ -1,7 +1,7 @@
 #pragma once
 
 #ifdef RNET_PLATFORM_WINDOWS
-	#include <winsock.h>
+	#include <winsock2.h>
 #endif
 
 #include "core/NetworkUtils.h"
@@ -16,6 +16,9 @@ namespace RamenNetworking
 
 	class Socket
 	{
+	public:
+		enum class RecieveResult { Success, Fail, Timedout, Disconnected };
+		enum class SendResult { Success, Fail, Timedout, Disconnected };
 	protected:
 		struct AcceptResult;
 
@@ -33,10 +36,14 @@ namespace RamenNetworking
 		bool IsValid() const;
 		void Close();
 
-		Result SetTimeout(uint32_t milliseconds);
 		// TODO : Change these to take in RamenNetworking::Buffer or something ?
-		Result Recv(char* buffer, uint32_t bufferSize);
-		Result Send(const char* buffer, uint32_t msgSize);
+		RecieveResult RecieveNoTimeout(char* buffer, uint32_t bufferSize);
+		// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
+		RecieveResult Recieve(char* buffer, uint32_t bufferSize, uint32_t timeoutMilliseconds = 0);
+
+		SendResult SendNoTimeout(const char* buffer, uint32_t msgSize);
+		// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
+		SendResult Send(const char* buffer, uint32_t msgSize, uint32_t timeoutMilliseconds = 0);
 
 		Result Listen(uint32_t maxQueueLength);
 		Result Bind(const Address& serverAddress);

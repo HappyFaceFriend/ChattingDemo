@@ -12,7 +12,8 @@ namespace RamenNetworking
 
 	Client::~Client()
 	{
-		Disconnect();
+		if (m_Status.load(std::memory_order_acquire) != Status::Disconnected)
+			Disconnect();
 		m_Socket.Close();
 	}
 
@@ -47,18 +48,25 @@ namespace RamenNetworking
 	Result Client::SendMessageToServer(char* buffer, uint32_t bufferSize)
 	{
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
+		// TEMP
+		uint32_t timeout = 10;
 
-		auto result = m_Socket.Send(buffer, bufferSize);
-		if (result == RamenNetworking::Result::Fail)
+		auto result = m_Socket.Send(buffer, bufferSize, timeout);
+		if (result == Socket::SendResult::Fail)
 		{
 			RNET_LOG_ERROR("Error sending data to server.");
+			return Result::Fail;
+		}
+		// TEMP
+		else if (result == Socket::SendResult::Disconnected)
+		{
 			return Result::Fail;
 		}
 		return Result::Success;
 	}
 	void Client::Disconnect()
 	{
-		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
+		ASSERT(m_Status.load(std::memory_order_acquire) != Status::Disconnected);
 
 		m_Status.store(Status::Disconnecting, std::memory_order_release);
 		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
@@ -89,14 +97,20 @@ namespace RamenNetworking
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{
 			std::vector<char> messageBuffer(m_MessageSize);
-			result = m_Socket.Recv(messageBuffer.data(), m_MessageSize);
-			if (result == Result::Success)
+			// TEMP
+			uint32_t timeout = 10;
+			auto result = m_Socket.Recieve(messageBuffer.data(), m_MessageSize, timeout);
+			if (result == Socket::RecieveResult::Success)
 			{
 				auto pushResult = m_MessageQueue.TryPush(std::move(messageBuffer));
 				if (!pushResult)
 					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
-			else
+			else if (result == Socket::RecieveResult::Disconnected)
+			{
+				break;
+			}
+			else if (result == Socket::RecieveResult::Fail)
 			{
 				RNET_LOG_ERROR("Recieving data failed");
 				break;

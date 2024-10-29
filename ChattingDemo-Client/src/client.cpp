@@ -34,6 +34,7 @@ int main()
 		
 		if (strcmp(msgBuffer, "QUIT") == 0)
 		{
+			client.Disconnect();
 			break;
 		}
 		while (true)

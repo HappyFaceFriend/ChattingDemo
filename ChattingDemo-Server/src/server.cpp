@@ -2,7 +2,6 @@
 
 #include <iostream>
 
-#include <windows.h>
 #include <RamenNetworking.h>
 
 constexpr int SERVER_PORT = 8080;

@@ -96,34 +96,52 @@ namespace RamenNetworking
 	void Server::RecieveFromClientThreadFunc(ClientID clientID)
 	{
 		auto& clientInfo = m_ClientInfos[clientID];
+		// TEMP
+		uint32_t timeout = 10;
 		while (clientInfo.isConnected)
 		{
 			char messageBuffer[1024] = "";
-			auto result = clientInfo.clientSocket.Recv(messageBuffer, m_MessageSize);
- 			if (result == Result::Success)
+			auto result = clientInfo.clientSocket.Recieve(messageBuffer, m_MessageSize, timeout);
+ 			if (result == Socket::RecieveResult::Success)
 			{
 				// TEMP: Message should be a struct and contain id information
 				auto pushResult = m_MessageQueue.TryPush(Message{ clientID, messageBuffer });
 				if (!pushResult)
 					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
-			else
+			else if (result == Socket::RecieveResult::Disconnected)
+			{
+				DisconnectClient(clientID);
+			}
+			else if (result == Socket::RecieveResult::Fail)
 			{
 				RNET_LOG_ERROR("Error reading data from {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
 				DisconnectClient(clientID);
 				break;
 			}
 		}
-		m_ClientThreads.erase(clientID);
-		m_ClientInfos.erase(clientID);
+
+		// Disconnect
+		{
+			std::unique_lock<std::shared_mutex> lock(m_ClientInfosLock);
+			m_ClientThreads.erase(clientID); // TODO: This destroys current thread
+			m_ClientInfos.erase(clientID);
+		}
 	}
+
 	Result Server::SendMessageToAllClients(const char* buffer, uint32_t bufferSize)
 	{
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
+		// TEMP
+		uint32_t timeout = 10;
 		for (auto& [clientID, clientInfo] : m_ClientInfos)
 		{
-			auto result = clientInfo.clientSocket.Send(buffer, bufferSize);
-			if (result == Result::Fail)
+			auto result = clientInfo.clientSocket.Send(buffer, bufferSize, timeout);
+			if (result == Socket::SendResult::Disconnected)
+			{
+				DisconnectClient(clientID);
+			}
+			else if (result == Socket::SendResult::Fail)
 			{
 				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
 				DisconnectClient(clientID);
@@ -132,11 +150,13 @@ namespace RamenNetworking
 		// TODO: Change return type to know each result
 		return Result::Success;
 	}
+
 	bool Server::TryPollMessage(Message& message)
 	{
 		auto result = m_MessageQueue.TryPop(message);
 		return result;
 	}
+
 	void Server::DisconnectClient(ClientID clientID)
 	{
 		m_ClientInfos[clientID].isConnected = false;

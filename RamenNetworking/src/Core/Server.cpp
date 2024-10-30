@@ -16,14 +16,17 @@ namespace RamenNetworking
 
 	Server::~Server()
 	{
-		m_IsListening = false;
-		m_ListenThread.join();
+		m_IsListening.store(false, std::memory_order_release);
+		m_IsRunning.store(false, std::memory_order_release);
 		for (auto& [clientID, connection] : m_ClientConnections)
 			DisconnectClient(clientID);
+
+		m_ListenThread.join();
 		for (auto& [clientID, connection] : m_ClientConnections)
 		{
 			connection.clientThread.join();
 		}
+		m_MainNetworkThread.join();
 	}
 
 	Result Server::Init(const Address& serverAddress)
@@ -62,11 +65,14 @@ namespace RamenNetworking
 
 		m_ClientAcceptedCallback = clientAcceptedCallback;
 
-		m_IsListening = true;
+		m_IsListening.store(true, std::memory_order_relaxed);
 		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientAcceptedCallback); });
 
-		m_IsRunning.store(true, std::memory_order_relaxed);
-		m_MainNetworkThread = std::thread([this]() { MainNetworkThreadFunc(); });
+		if (!m_IsRunning.load(std::memory_order_acquire))
+		{
+			m_IsRunning.store(true, std::memory_order_relaxed);
+			m_MainNetworkThread = std::thread([this]() { MainNetworkThreadFunc(); });
+		}
 	}
 
 	void Server::MainNetworkThreadFunc()
@@ -104,7 +110,7 @@ namespace RamenNetworking
 	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
 		m_ServerSocket.Listen(10);
-		while (m_IsListening)
+		while (m_IsListening.load(std::memory_order_acquire))
 		{
 			RNET_LOG("Listening..");
 			auto& clientInfo = m_ServerSocket.Accept();
@@ -190,5 +196,10 @@ namespace RamenNetworking
 	void Server::DisconnectClient(ClientID clientID)
 	{
 		m_ClientConnections[clientID].isConnected = false;
+	}
+
+	void Server::StopListening()
+	{
+		m_IsListening.store(false, std::memory_order_release);
 	}
 }

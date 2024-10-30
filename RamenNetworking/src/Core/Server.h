@@ -31,7 +31,11 @@ namespace RamenNetworking
 		Server& operator=(const Server&) = delete;
 
 		Result Init(const Address& serverAddress);
+		
 		void StartListening(const ClientAcceptedCallback& clientAcceptedCallback);
+		void StopListening();
+
+
 		Result SendMessageToAllClients(const char* buffer, uint32_t bufferSize = DEFAULT_MESSAGE_SIZE);
 
 		bool TryPollMessage(Message& message);
@@ -44,7 +48,7 @@ namespace RamenNetworking
 			Socket clientSocket;
 			Address address;
 			std::thread clientThread;
-			bool isConnected = true; // TODO: Use enum to manage client state, change to atomic
+			bool isConnected = true; // TODO: Use enum to manage client state & change to atomic
 			bool isThreadDone = false;
 		};
 
@@ -72,8 +76,7 @@ namespace RamenNetworking
 		std::shared_mutex m_ClientInfosLock;
 
 
-		// TODO: This should be thread safe
-		bool m_IsListening = false;
+		std::atomic<bool> m_IsListening = false;
 		std::atomic<bool> m_IsRunning = false;
 	};
 }

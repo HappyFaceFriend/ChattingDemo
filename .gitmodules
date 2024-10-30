@@ -1,0 +1,3 @@
+[submodule "vendor/Ramensoup"]
+	path = vendor/Ramensoup
+	url = https://github.com/HappyFaceFriend/ramensoup

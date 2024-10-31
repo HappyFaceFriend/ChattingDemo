@@ -100,7 +100,7 @@
       <Project>{80775CD4-EC02-CA98-F513-4D8D611E2699}</Project>
     </ProjectReference>
     <ProjectReference Include="..\vendor\Ramensoup\Ramensoup\Ramensoup.vcxproj">
-      <Project>{57940020-8E99-AEB6-271F-61E0F7F6B73B}</Project>
+      <Project>{9FCA1681-0B35-CBF7-5473-7C9DC01CA94C}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,12 +1,8 @@
 workspace "ChattingDemo"
 	architecture "x64"
 	platforms {"Win64"}
+	configurations {"Debug", "Release"}
 
-	configurations
-	{
-		"Debug",
-		"Release"
-	}
 
 	-- includes from Ramensoup, used in server,client projects
 	IncludeDirs = {}
@@ -20,11 +16,21 @@ workspace "ChattingDemo"
 	IncludeDirs["entt"] = RamensoupPath .. "vendor/entt/include"
 	IncludeDirs["yaml_cpp"] = RamensoupPath .. "vendor/yaml-cpp/include"
 	IncludeDirs["spdlog"] = RamensoupPath .. "vendor/spdlog/include"
+	
+	
+    outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+	
+	include "/vendor/Ramensoup/Ramensoup/vendor/assimp"
+	include "/vendor/Ramensoup/Ramensoup/vendor/GLFW"
+	include "/vendor/Ramensoup/Ramensoup/vendor/Glad"
+	include "/vendor/Ramensoup/Ramensoup/vendor/ImGui"
+	include "/vendor/Ramensoup/Ramensoup/vendor/yaml-cpp"
 
 	externalproject "Ramensoup"
 		location "vendor/Ramensoup/Ramensoup"
 		kind "StaticLib"
 		language "C++"
+		staticruntime "on"
 
     include "RamenNetworking"
     include "ChattingDemo-Server"

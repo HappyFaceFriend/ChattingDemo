@@ -3,12 +3,13 @@
 #include <iostream>
 
 #include <RamenNetworking.h>
-
+#include <Ramensoup.h>
 constexpr int SERVER_PORT = 8080;
 constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 
 int main()
 {
+	glm::vec3 temp(0, 0, 0);
 	std::string serverIP = SERVER_IP_ADDRESS;
 	unsigned short serverPort = SERVER_PORT;
 #if 0

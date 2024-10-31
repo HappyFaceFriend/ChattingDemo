@@ -1,5 +1,6 @@
 //https://navendus.tripod.com/winsock/winsock20_01.htm
 
+#if 0
 #include <iostream>
 
 #include <RamenNetworking.h>
@@ -9,7 +10,6 @@ constexpr char SERVER_IP_ADDRESS[] = "127.0.0.1";
 
 int main()
 {
-	glm::vec3 temp(0, 0, 0);
 	std::string serverIP = SERVER_IP_ADDRESS;
 	unsigned short serverPort = SERVER_PORT;
 #if 0
@@ -48,3 +48,4 @@ int main()
 	}
 	return 0;
 }
+#endif

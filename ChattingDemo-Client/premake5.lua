@@ -40,14 +40,16 @@ project "ChattingDemo-Client"
 	defines
 	{
 		"RNET_PLATFORM_WINDOWS",
+		-- ramensoup defines
+		"RS_PLATFORM_WINDOWS"
 	}
 	
 	filter "configurations:Debug"
-		defines "CHAT_DEBUG"
+		defines {"CHAT_DEBUG", "RS_DEBUG"}
 		runtime "Debug"
 		symbols "on"
 
 	filter "configurations:Release"
-		defines "CHAT_RELEASE"
+		defines {"CHAT_RELEASE", "RS_RELEASE"}
 		runtime "Release"
 		optimize "on"

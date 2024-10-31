@@ -18,20 +18,11 @@ project "ChattingDemo-Server"
 	{
 		"../RamenNetworking/src",
 		"src",
-
-		"../vendor/Ramensoup/Ramensoup/src",
-		"%{IncludeDirs.ImGui}",
-		"%{IncludeDirs.glm}",
-		"%{IncludeDirs.assimp}",
-		"%{IncludeDirs.entt}",
-		"%{IncludeDirs.yaml}",
-		"%{IncludeDirs.spdlog}",
 	}
 
 	links
 	{
 		"RamenNetworking",
-		"Ramensoup"
 	}
 
 	filter "system:windows"

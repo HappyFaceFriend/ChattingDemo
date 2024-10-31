@@ -19,12 +19,22 @@ workspace "ChattingDemo"
 	
 	
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
-	
-	include "/vendor/Ramensoup/Ramensoup/vendor/assimp"
-	include "/vendor/Ramensoup/Ramensoup/vendor/GLFW"
-	include "/vendor/Ramensoup/Ramensoup/vendor/Glad"
-	include "/vendor/Ramensoup/Ramensoup/vendor/ImGui"
-	include "/vendor/Ramensoup/Ramensoup/vendor/yaml-cpp"
+
+	externalproject "assimp"
+		location "/vendor/Ramensoup/Ramensoup/vendor/assimp"
+   		kind "StaticLib"
+	externalproject "GLFW"
+		location"/vendor/Ramensoup/Ramensoup/vendor/GLFW"
+		kind "StaticLib"
+	externalproject "Glad"
+		location "/vendor/Ramensoup/Ramensoup/vendor/Glad"
+		kind "StaticLib"
+	externalproject "ImGui"
+		location "/vendor/Ramensoup/Ramensoup/vendor/ImGui"
+		kind "StaticLib"
+	externalproject "yaml-cll"
+		location "/vendor/Ramensoup/Ramensoup/vendor/yaml-cpp"
+		kind "StaticLib"
 
 	externalproject "Ramensoup"
 		location "vendor/Ramensoup/Ramensoup"

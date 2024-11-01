@@ -20,7 +20,7 @@ private:
 	constexpr static char SERVER_IP_ADDRESS[] = "127.0.0.1";
 	constexpr static int MSG_SIZE = 1024;
 
-	RamenNetworking::TCPClient m_Client;
+	RamenNetworking::TCPClient m_ChatClient;
 	char m_MsgBuffer[MSG_SIZE] = { 0 };
 	std::vector<std::vector<char>> m_RecievedMessages;
 };

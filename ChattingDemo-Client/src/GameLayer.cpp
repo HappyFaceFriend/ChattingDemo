@@ -12,17 +12,12 @@ GameLayer::GameLayer()
 
 void GameLayer::OnAttach()
 {
-	std::string serverIP = SERVER_IP_ADDRESS;
-	unsigned short serverPort = SERVER_PORT;
-#if 0
-	std::cout << "CHATTING DEMO - CLIENT\n";
-	std::cout << "Enter server IP: ";
-	std::cin >> serverIP;
-	std::cout << "Enter server Port: ";
-	std::cin >> serverPort;
-#endif
-	m_ChatClient.Init();
-	m_ChatClient.ConnectToServer({ serverIP, serverPort });
+	m_TitleScene = std::make_shared<TitleScene>();
+	m_TitleScene->SetConnectButtonCallback([&](const char* serverIP, const char* serverPortNumber) {
+		m_ChatClient.Init();
+		m_ChatClient.ConnectToServer({ serverIP, (uint16_t)std::atoi(serverPortNumber) });
+	});
+
 
 }
 
@@ -33,12 +28,15 @@ void GameLayer::OnDetach() noexcept
 void GameLayer::OnUpdate()
 {
 	// Poll messages
-	while (true)
+	if (m_ChatClient.GetStatus() == RamenNetworking::TCPClient::Status::Connected)
 	{
-		std::vector<char> message;
-		if (!m_ChatClient.TryPollMessage(message))
-			break;
-		m_RecievedMessages.emplace_back(std::move(message));
+		while (true)
+		{
+			std::vector<char> message;
+			if (!m_ChatClient.TryPollMessage(message))
+				break;
+			m_RecievedMessages.emplace_back(std::move(message));
+		}
 	}
 }
 
@@ -48,26 +46,42 @@ void GameLayer::OnImGuiUpdate()
 {
 	ImGuiBeginDockspace(); // Begin ImGui dockspace
 
-	auto& io = ImGui::GetIO();
-	ImGui::Begin("Test Window");
-	ImGui::Text("client program");
+	auto clientStatus = m_ChatClient.GetStatus();
+	if (clientStatus == RamenNetworking::TCPClient::Status::Disconnected)
+	{
+		m_TitleScene->OnImGuiUpdate();
+	}
+	else if (clientStatus == RamenNetworking::TCPClient::Status::Connected)
+	{
+		ImGui::Begin("Test Window");
+		ImGui::Text("client program");
 
-	ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
-	ImGui::PushID("inputMessage");
-	auto inputTextReturned = ImGui::InputText("", m_MsgBuffer, MSG_SIZE, flags);
-	ImGui::PopID();
-	ImGui::SameLine(500);
-	if (inputTextReturned || ImGui::Button("Send"))
-	{
-		m_ChatClient.SendMessageToServer(m_MsgBuffer, sizeof(m_MsgBuffer + 1));
-		RS_LOG("Sent message: {0}", m_MsgBuffer);
-		memset(m_MsgBuffer, 0, MSG_SIZE);
+		ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;
+		ImGui::PushID("inputMessage");
+		auto inputTextReturned = ImGui::InputText("", m_MsgBuffer, MSG_SIZE, flags);
+		ImGui::PopID();
+		ImGui::SameLine(0);
+		if (inputTextReturned || ImGui::Button("Send"))
+		{
+			if (strcmp(m_MsgBuffer, "QUIT") == 0)
+			{
+				strcpy(m_MsgBuffer, "");
+				m_ChatClient.Disconnect();
+			}
+			else
+			{
+				m_ChatClient.SendMessageToServer(m_MsgBuffer, sizeof(m_MsgBuffer + 1));
+				RS_LOG("Sent message: {0}", m_MsgBuffer);
+				memset(m_MsgBuffer, 0, MSG_SIZE);
+				ImGui::SetKeyboardFocusHere(-1);
+			}
+		}
+		for (auto& message : m_RecievedMessages)
+		{
+			ImGui::Text(message.data());
+		}
+		ImGui::End();
 	}
-	for (auto& message : m_RecievedMessages)
-	{
-		ImGui::Text(message.data());
-	}
-	ImGui::End();
 
 	ImGui::End(); // End ImGui dockspace
 }

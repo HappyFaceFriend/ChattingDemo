@@ -13,7 +13,7 @@ namespace RamenNetworking
 	class TCPClient
 	{
 	public:
-		enum class Status { Disconnected, ConnectingToServer, Connected, Disconnecting };
+		enum class Status { Disconnected, ConnectingToServer, Connected, ConnectionFailed, Disconnecting };
 
 		static constexpr size_t MAX_MESSAGE_COUNT = 32;
 	public:

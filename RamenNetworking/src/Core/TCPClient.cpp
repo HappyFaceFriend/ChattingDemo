@@ -37,9 +37,17 @@ namespace RamenNetworking
 	}
 	void TCPClient::ConnectToServer(const Address& serverAddress)
 	{
-		ASSERT(m_Socket.IsValid());
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Disconnected);
 
+		if (!m_Socket.IsValid())
+		{
+			auto initResult = m_Socket.Init();
+			if (initResult == RamenNetworking::Result::Fail)
+			{
+				m_Status.store(Status::ConnectionFailed, std::memory_order_release);
+				return;
+			}
+		}
 		m_ServerAddress = serverAddress;
 		m_IsRunning.store(true, std::memory_order_relaxed);
 		m_NetworkThread = std::thread([this]() { NetworkLoop(); });
@@ -47,6 +55,7 @@ namespace RamenNetworking
 
 	Result TCPClient::SendMessageToServer(char* buffer, uint32_t bufferSize)
 	{
+		ASSERT(m_Socket.IsValid());
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
 		// TEMP
 		uint32_t timeout = 10;
@@ -66,8 +75,6 @@ namespace RamenNetworking
 	}
 	void TCPClient::Disconnect()
 	{
-		ASSERT(m_Status.load(std::memory_order_acquire) != Status::Disconnected);
-
 		m_Status.store(Status::Disconnecting, std::memory_order_release);
 		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
 		m_NetworkThread.join();
@@ -81,13 +88,12 @@ namespace RamenNetworking
 	{
 		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
 
-
 		// Make Connection with server
 		auto result = m_Socket.Connect({ m_ServerAddress.IPAddress, m_ServerAddress.PortNumber });
 		if (result == RamenNetworking::Result::Fail)
 		{
 			RNET_LOG_ERROR("Failed to connect to server.");
-			m_Status.store(Status::Disconnected, std::memory_order_release);
+			m_Status.store(Status::ConnectionFailed, std::memory_order_release);
 			return;
 		}
 
@@ -116,6 +122,7 @@ namespace RamenNetworking
 				break;
 			}
 		}
+		m_Socket.Close();
 		m_Status.store(Status::Disconnected, std::memory_order_release);
 	}
 

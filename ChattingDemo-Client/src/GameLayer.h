@@ -3,6 +3,8 @@
 #include <Ramensoup.h>
 #include <RamenNetworking.h>
 
+#include "Scenes/TitleScene.h"
+
 class GameLayer : public Ramensoup::Layer
 {
 public:
@@ -23,4 +25,6 @@ private:
 	RamenNetworking::TCPClient m_ChatClient;
 	char m_MsgBuffer[MSG_SIZE] = { 0 };
 	std::vector<std::vector<char>> m_RecievedMessages;
+
+	std::shared_ptr<TitleScene> m_TitleScene;
 };

@@ -14,7 +14,7 @@ int main()
 {
 	std::cout << "CHATTING DEMO - SERVER\n";
 
-	RamenNetworking::Server server;
+	RamenNetworking::TCPServer server;
 	auto result = server.Init({ SERVER_IP_ADDRESS, SERVER_PORT });
 	if (result == Result::Fail)
 	{
@@ -22,13 +22,17 @@ int main()
 		return 1;
 	}
 
-	server.StartListening([](RamenNetworking::Address& clientAddress, RamenNetworking::Server::ClientID clientID) {
+	server.StartListening([](RamenNetworking::Address& clientAddress, RamenNetworking::TCPServer::ClientID clientID) {
 		std::cout << "Client " << clientID << " connected - " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
-		});
+		},
+		[](RamenNetworking::Address& clientAddress, RamenNetworking::TCPServer::ClientID clientID, bool graceful) {
+			std::cout << "Client " << clientID << " disconnected " << (graceful ? "gracefully" : "disgracefully")<< " - " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
+		}
+		);
 
 	while (true)
 	{
-		RamenNetworking::Server::Message message;
+		RamenNetworking::TCPServer::Message message;
 		auto hasMessage = server.TryPollMessage(message);
 
 		if (hasMessage)
@@ -36,7 +40,7 @@ int main()
 			std::cout << "Received from client" << message.id << ": " << message.message << "\n";
 			if (strcmp(message.message.c_str(), "QUIT") == 0)
 			{
-				server.DisconnectClient(message.id);
+				server.DisconnectClient(message.id, true);
 				std::cout << "Disconnected " << message.id << "\n";
 				continue;
 			}

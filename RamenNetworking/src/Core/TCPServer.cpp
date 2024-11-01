@@ -19,7 +19,7 @@ namespace RamenNetworking
 		m_IsListening.store(false, std::memory_order_release);
 		m_IsRunning.store(false, std::memory_order_release);
 		for (auto& [clientID, connection] : m_ClientConnections)
-			DisconnectClient(clientID);
+			DisconnectClient(clientID, true);
 
 		m_ListenThread.join();
 		for (auto& [clientID, connection] : m_ClientConnections)
@@ -59,14 +59,16 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	void TCPServer::StartListening(const ClientAcceptedCallback& clientAcceptedCallback)
+	// TODO: Need to support restarting
+	void TCPServer::StartListening(const ClientConnectedCallback& clientConnectedCallback, const ClientDisconnectedCallback& clientDisconectedCallback)
 	{
 		ASSERT(m_ServerSocket.IsValid());
 
-		m_ClientAcceptedCallback = clientAcceptedCallback;
+		m_ClientConnectedCallback = clientConnectedCallback;
+		m_ClientDisconnectedCallback = clientDisconectedCallback;
 
 		m_IsListening.store(true, std::memory_order_relaxed);
-		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientAcceptedCallback); });
+		m_ListenThread = std::thread([this]() { ListenThreadFunc(m_ClientConnectedCallback); });
 
 		if (!m_IsRunning.load(std::memory_order_acquire))
 		{
@@ -107,7 +109,7 @@ namespace RamenNetworking
 		}
 
 	}
-	void TCPServer::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
+	void TCPServer::ListenThreadFunc(const ClientConnectedCallback& clientAcceptedCallback)
 	{
 		m_ServerSocket.Listen(10);
 		while (m_IsListening.load(std::memory_order_acquire))
@@ -131,7 +133,7 @@ namespace RamenNetworking
 					std::thread([this, clientID = clientID]() { RecieveFromClientThreadFunc(clientID); })
 				};
 
-				m_ClientAcceptedCallback(clientInfo.clientAddress, clientID);
+				m_ClientConnectedCallback(clientInfo.clientAddress, clientID);
 			}
 		}
 	}
@@ -153,12 +155,12 @@ namespace RamenNetworking
 			}
 			else if (result == TCPSocket::RecieveResult::Disconnected)
 			{
-				DisconnectClient(clientID);
+				DisconnectClient(clientID, true);
 			}
 			else if (result == TCPSocket::RecieveResult::Fail)
 			{
 				RNET_LOG_ERROR("Error reading data from {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
-				DisconnectClient(clientID);
+				DisconnectClient(clientID, false);
 				break;
 			}
 		}
@@ -175,12 +177,12 @@ namespace RamenNetworking
 			auto result = clientInfo.clientSocket.Send(buffer, bufferSize, timeout);
 			if (result == TCPSocket::SendResult::Disconnected)
 			{
-				DisconnectClient(clientID);
+				DisconnectClient(clientID, true);
 			}
 			else if (result == TCPSocket::SendResult::Fail)
 			{
 				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
-				DisconnectClient(clientID);
+				DisconnectClient(clientID, false);
 			}
 		}
 		// TODO: Change return type to know each result
@@ -193,8 +195,9 @@ namespace RamenNetworking
 		return result;
 	}
 
-	void TCPServer::DisconnectClient(ClientID clientID)
+	void TCPServer::DisconnectClient(ClientID clientID, bool graceful)
 	{
+		m_ClientDisconnectedCallback(m_ClientConnections[clientID].address, clientID, graceful);
 		m_ClientConnections[clientID].isConnected = false;
 	}
 

@@ -15,7 +15,8 @@ namespace RamenNetworking
 	{
 	public:
 		using ClientID = uint32_t;
-		using ClientAcceptedCallback = std::function<void(Address, ClientID)>;
+		using ClientConnectedCallback = std::function<void(Address, ClientID)>;
+		using ClientDisconnectedCallback = std::function<void(Address, ClientID, bool)>;
 
 		// Mabye this should contain more information
 		struct Message
@@ -32,14 +33,14 @@ namespace RamenNetworking
 
 		Result Init(const Address& serverAddress);
 		
-		void StartListening(const ClientAcceptedCallback& clientAcceptedCallback);
+		void StartListening(const ClientConnectedCallback& clientConnectedCallback, const ClientDisconnectedCallback& clientDisconectedCallback);
 		void StopListening();
 
 
 		Result SendMessageToAllClients(const char* buffer, uint32_t bufferSize = DEFAULT_MESSAGE_SIZE);
 
 		bool TryPollMessage(Message& message);
-		void DisconnectClient(ClientID clientID);
+		void DisconnectClient(ClientID clientID, bool graceful);
 
 	private:
 		struct ClientConnection
@@ -53,7 +54,7 @@ namespace RamenNetworking
 		};
 
 	private:
-		void ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback);
+		void ListenThreadFunc(const ClientConnectedCallback& clientAcceptedCallback);
 		void RecieveFromClientThreadFunc(ClientID clientID);
 		void MainNetworkThreadFunc();
 
@@ -69,8 +70,8 @@ namespace RamenNetworking
 		std::thread m_MainNetworkThread{};
 		std::thread m_ListenThread{};
 		
-		// TEMP
-		ClientAcceptedCallback m_ClientAcceptedCallback;
+		ClientConnectedCallback m_ClientConnectedCallback;
+		ClientDisconnectedCallback m_ClientDisconnectedCallback;
 
 		std::unordered_map<ClientID, ClientConnection> m_ClientConnections;
 		std::shared_mutex m_ClientInfosLock;

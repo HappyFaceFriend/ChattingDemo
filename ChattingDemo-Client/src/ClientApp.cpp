@@ -5,6 +5,8 @@
 ClientApp::ClientApp()
 {
 	//RS_LOG("Hello Client!");
+	m_GameLayer = std::make_shared<GameLayer>();
+	PushLayer(m_GameLayer);
 
 }
 

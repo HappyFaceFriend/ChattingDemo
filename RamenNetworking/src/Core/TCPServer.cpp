@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "Server.h"
+#include "TCPServer.h"
 
 #include <algorithm>
 
@@ -7,14 +7,14 @@
 
 namespace RamenNetworking
 {
-	Server::ClientID Server::s_NextClientID = 0;
+	TCPServer::ClientID TCPServer::s_NextClientID = 0;
 
-	Server::Server(size_t messageSize, size_t messageQueueSize)
+	TCPServer::TCPServer(size_t messageSize, size_t messageQueueSize)
 		:m_MessageSize(messageSize), m_MessageQueueSize(messageQueueSize), m_MessageQueue(messageQueueSize)
 	{
 	}
 
-	Server::~Server()
+	TCPServer::~TCPServer()
 	{
 		m_IsListening.store(false, std::memory_order_release);
 		m_IsRunning.store(false, std::memory_order_release);
@@ -29,7 +29,7 @@ namespace RamenNetworking
 		m_MainNetworkThread.join();
 	}
 
-	Result Server::Init(const Address& serverAddress)
+	Result TCPServer::Init(const Address& serverAddress)
 	{
 		// TODO: Validate serverAddress
 		m_ServerAddress = serverAddress;
@@ -59,7 +59,7 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	void Server::StartListening(const ClientAcceptedCallback& clientAcceptedCallback)
+	void TCPServer::StartListening(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
 		ASSERT(m_ServerSocket.IsValid());
 
@@ -75,7 +75,7 @@ namespace RamenNetworking
 		}
 	}
 
-	void Server::MainNetworkThreadFunc()
+	void TCPServer::MainNetworkThreadFunc()
 	{
 		std::vector<ClientID> clientsToRemove;
 		while (m_IsRunning.load(std::memory_order_acquire))
@@ -107,7 +107,7 @@ namespace RamenNetworking
 		}
 
 	}
-	void Server::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
+	void TCPServer::ListenThreadFunc(const ClientAcceptedCallback& clientAcceptedCallback)
 	{
 		m_ServerSocket.Listen(10);
 		while (m_IsListening.load(std::memory_order_acquire))
@@ -135,7 +135,7 @@ namespace RamenNetworking
 			}
 		}
 	}
-	void Server::RecieveFromClientThreadFunc(ClientID clientID)
+	void TCPServer::RecieveFromClientThreadFunc(ClientID clientID)
 	{
 		auto& clientInfo = m_ClientConnections[clientID];
 		// TEMP
@@ -144,18 +144,18 @@ namespace RamenNetworking
 		{
 			char messageBuffer[1024] = "";
 			auto result = clientInfo.clientSocket.Recieve(messageBuffer, m_MessageSize, timeout);
- 			if (result == Socket::RecieveResult::Success)
+ 			if (result == TCPSocket::RecieveResult::Success)
 			{
 				// TEMP: Message should be a struct and contain id information
 				auto pushResult = m_MessageQueue.TryPush(Message{ clientID, messageBuffer });
 				if (!pushResult)
 					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
-			else if (result == Socket::RecieveResult::Disconnected)
+			else if (result == TCPSocket::RecieveResult::Disconnected)
 			{
 				DisconnectClient(clientID);
 			}
-			else if (result == Socket::RecieveResult::Fail)
+			else if (result == TCPSocket::RecieveResult::Fail)
 			{
 				RNET_LOG_ERROR("Error reading data from {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
 				DisconnectClient(clientID);
@@ -165,7 +165,7 @@ namespace RamenNetworking
 		clientInfo.isThreadDone = true;
 	}
 
-	Result Server::SendMessageToAllClients(const char* buffer, uint32_t bufferSize)
+	Result TCPServer::SendMessageToAllClients(const char* buffer, uint32_t bufferSize)
 	{
 		std::shared_lock<std::shared_mutex> lock(m_ClientInfosLock);
 		// TEMP
@@ -173,11 +173,11 @@ namespace RamenNetworking
 		for (auto& [clientID, clientInfo] : m_ClientConnections)
 		{
 			auto result = clientInfo.clientSocket.Send(buffer, bufferSize, timeout);
-			if (result == Socket::SendResult::Disconnected)
+			if (result == TCPSocket::SendResult::Disconnected)
 			{
 				DisconnectClient(clientID);
 			}
-			else if (result == Socket::SendResult::Fail)
+			else if (result == TCPSocket::SendResult::Fail)
 			{
 				RNET_LOG_ERROR("Error sending data to {0}:{1}", clientInfo.address.IPAddress, clientInfo.address.PortNumber);
 				DisconnectClient(clientID);
@@ -187,18 +187,18 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	bool Server::TryPollMessage(Message& message)
+	bool TCPServer::TryPollMessage(Message& message)
 	{
 		auto result = m_MessageQueue.TryPop(message);
 		return result;
 	}
 
-	void Server::DisconnectClient(ClientID clientID)
+	void TCPServer::DisconnectClient(ClientID clientID)
 	{
 		m_ClientConnections[clientID].isConnected = false;
 	}
 
-	void Server::StopListening()
+	void TCPServer::StopListening()
 	{
 		m_IsListening.store(false, std::memory_order_release);
 	}

@@ -4,24 +4,24 @@
 #include <queue>
 #include <atomic>
 
-#include "Networking/Socket.h"
+#include "Networking/TCPSocket.h"
 #include "Utilities/MessageQueue.h"
 #include "Defs.h"
 
 namespace RamenNetworking
 {
-	class Client
+	class TCPClient
 	{
 	public:
 		enum class Status { Disconnected, ConnectingToServer, Connected, Disconnecting };
 
 		static constexpr size_t MAX_MESSAGE_COUNT = 32;
 	public:
-		Client(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
-		~Client();
+		TCPClient(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
+		~TCPClient();
 
-		Client(const Client&) = delete;
-		Client& operator=(const Client&) = delete;
+		TCPClient(const TCPClient&) = delete;
+		TCPClient& operator=(const TCPClient&) = delete;
 
 		Result Init();
 		void ConnectToServer(const Address& serverAddress);
@@ -40,7 +40,7 @@ namespace RamenNetworking
 		size_t m_MessageQueueSize; // This is not const because this might provide resizing methods in the future.
 		MessageQueue<std::vector<char>> m_MessageQueue;
 
-		Socket m_Socket{};
+		TCPSocket m_Socket{};
 		std::thread m_NetworkThread{};
 		Address m_ServerAddress{};
 

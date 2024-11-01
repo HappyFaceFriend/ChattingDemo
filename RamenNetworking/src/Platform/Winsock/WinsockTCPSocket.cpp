@@ -1,40 +1,40 @@
 #include "pch.h"
-#include "Networking/Socket.h"
+#include "Networking/TCPSocket.h"
 
 #pragma comment(lib, "ws2_32.lib") // Link with Winsock library
 
 namespace RamenNetworking
 {
-	Socket::Socket()
+	TCPSocket::TCPSocket()
 		:m_RawSocket(INVALID_SOCKET)
 	{
 	}
 	
-	Socket::Socket(RawSocketType rawSocket)
+	TCPSocket::TCPSocket(RawSocketType rawSocket)
 		:m_RawSocket(rawSocket)
 	{
 	}
 
-	Socket::~Socket()
+	TCPSocket::~TCPSocket()
 	{
 		if (m_RawSocket != INVALID_SOCKET)
 			Close();
 	}
 
-	Socket::Socket(Socket&& other)
+	TCPSocket::TCPSocket(TCPSocket&& other)
 		:m_RawSocket(other.m_RawSocket)
 	{
 		other.m_RawSocket = INVALID_SOCKET;
 	}
 
-	Socket& Socket::operator=(Socket&& other)
+	TCPSocket& TCPSocket::operator=(TCPSocket&& other)
 	{
 		m_RawSocket = other.m_RawSocket;
 		other.m_RawSocket = INVALID_SOCKET;
 		return *this;
 	}
 
-	Result Socket::Init()
+	Result TCPSocket::Init()
 	{
 		m_RawSocket = socket(AF_INET, SOCK_STREAM, 0); // Address family, protocol type, protocol name
 		if (m_RawSocket == INVALID_SOCKET)
@@ -46,24 +46,24 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	bool Socket::IsValid() const
+	bool TCPSocket::IsValid() const
 	{ 
 		return m_RawSocket != INVALID_SOCKET;
 	}
 
-	void Socket::Close()
+	void TCPSocket::Close()
 	{
 		closesocket(m_RawSocket);
 		m_RawSocket = INVALID_SOCKET;
 	}
 
-	Socket::RecieveResult Socket::RecieveNoTimeout(char* buffer, uint32_t bufferLength)
+	TCPSocket::RecieveResult TCPSocket::RecieveNoTimeout(char* buffer, uint32_t bufferLength)
 	{
 		return Recieve(buffer, bufferLength, 0);
 	}
 
 	// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
-	Socket::RecieveResult Socket::Recieve(char* buffer, uint32_t bufferLength, uint32_t timeoutMilliseconds)
+	TCPSocket::RecieveResult TCPSocket::Recieve(char* buffer, uint32_t bufferLength, uint32_t timeoutMilliseconds)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(bufferLength > 0 && bufferLength <= std::numeric_limits<int>::max());
@@ -97,13 +97,13 @@ namespace RamenNetworking
 		return RecieveResult::Success;
 	}
 
-	Socket::SendResult Socket::SendNoTimeout(const char* buffer, uint32_t msgSize)
+	TCPSocket::SendResult TCPSocket::SendNoTimeout(const char* buffer, uint32_t msgSize)
 	{
 		return Send(buffer, msgSize, 0);
 	}
 
 	// Setting timeoutMilliseconds to 0 means removing timeout (wait forever)
-	Socket::SendResult Socket::Send(const char* buffer, uint32_t msgSize, uint32_t timeoutMilliseconds)
+	TCPSocket::SendResult TCPSocket::Send(const char* buffer, uint32_t msgSize, uint32_t timeoutMilliseconds)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(msgSize <= std::numeric_limits<int>::max());
@@ -137,7 +137,7 @@ namespace RamenNetworking
 		}
 		return SendResult::Success;
 	}
-	Result Socket::Connect(const Address& serverAddress)
+	Result TCPSocket::Connect(const Address& serverAddress)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		// TODO : check serverAddress validity
@@ -157,7 +157,7 @@ namespace RamenNetworking
 		}
 		return Result::Success;
 	}
-	Result Socket::Bind(const Address& serverAddress)
+	Result TCPSocket::Bind(const Address& serverAddress)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		// TODO : check serverAddress validity
@@ -177,7 +177,7 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	Result Socket::Listen(uint32_t maxQueueLength)
+	Result TCPSocket::Listen(uint32_t maxQueueLength)
 	{
 		ASSERT(m_RawSocket != INVALID_SOCKET);
 		ASSERT(maxQueueLength <= static_cast<uint32_t>(std::numeric_limits<int>::max()));
@@ -192,7 +192,7 @@ namespace RamenNetworking
 		return Result::Success;
 	}
 
-	Socket::AcceptResult Socket::Accept()
+	TCPSocket::AcceptResult TCPSocket::Accept()
 	{
 		SOCKET clientSocket;
 		struct sockaddr_in clientAddr;
@@ -203,8 +203,8 @@ namespace RamenNetworking
 		{
 			auto errorCode = WSAGetLastError();
 			RNET_LOG_ERROR("Accepting new socket failed. WSAErrorCode: {0}", errorCode);
-			return { Socket(), Address() };
+			return { TCPSocket(), Address() };
 		}
-		return { Socket(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
+		return { TCPSocket(clientSocket), {inet_ntoa(clientAddr.sin_addr), clientAddr.sin_port} };
 	}
 }

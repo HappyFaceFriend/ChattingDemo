@@ -14,7 +14,7 @@ namespace RamenNetworking
 #endif
 
 
-	class Socket
+	class TCPSocket
 	{
 	public:
 		enum class RecieveResult { Success, Fail, Timedout, Disconnected };
@@ -23,14 +23,14 @@ namespace RamenNetworking
 		struct AcceptResult;
 
 	public:
-		Socket();
-		Socket(RawSocketType rawSocket);
-		virtual ~Socket();
+		TCPSocket();
+		TCPSocket(RawSocketType rawSocket);
+		virtual ~TCPSocket();
 
-		Socket(const Socket&) = delete;
-		Socket& operator=(const Socket&) = delete;
-		Socket(Socket&&);
-		Socket& operator=(Socket&&);
+		TCPSocket(const TCPSocket&) = delete;
+		TCPSocket& operator=(const TCPSocket&) = delete;
+		TCPSocket(TCPSocket&&);
+		TCPSocket& operator=(TCPSocket&&);
 
 		Result Init();
 		bool IsValid() const;
@@ -54,9 +54,9 @@ namespace RamenNetworking
 		RawSocketType m_RawSocket;
 	};
 
-	struct Socket::AcceptResult
+	struct TCPSocket::AcceptResult
 	{
-		Socket clientSocket;
+		TCPSocket clientSocket;
 		Address clientAddress;
 	};
 }

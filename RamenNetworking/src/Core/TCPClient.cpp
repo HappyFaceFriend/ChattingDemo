@@ -1,23 +1,23 @@
 #include "pch.h"
-#include "Client.h"
+#include "TCPClient.h"
 
 #include "Networking/NetworkAPI.h"
 
 namespace RamenNetworking
 {
-	Client::Client(size_t messageSize, size_t messageQueueSize)
+	TCPClient::TCPClient(size_t messageSize, size_t messageQueueSize)
 		:m_MessageSize(messageSize), m_MessageQueueSize(messageQueueSize), m_MessageQueue(messageQueueSize)
 	{
 	}
 
-	Client::~Client()
+	TCPClient::~TCPClient()
 	{
 		if (m_Status.load(std::memory_order_acquire) != Status::Disconnected)
 			Disconnect();
 		m_Socket.Close();
 	}
 
-	Result Client::Init()
+	Result TCPClient::Init()
 	{
 		if (!NetworkAPI::IsValid())
 			NetworkAPI::Init();
@@ -35,7 +35,7 @@ namespace RamenNetworking
 		}
 		return Result::Success;
 	}
-	void Client::ConnectToServer(const Address& serverAddress)
+	void TCPClient::ConnectToServer(const Address& serverAddress)
 	{
 		ASSERT(m_Socket.IsValid());
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Disconnected);
@@ -45,26 +45,26 @@ namespace RamenNetworking
 		m_NetworkThread = std::thread([this]() { NetworkLoop(); });
 	}
 
-	Result Client::SendMessageToServer(char* buffer, uint32_t bufferSize)
+	Result TCPClient::SendMessageToServer(char* buffer, uint32_t bufferSize)
 	{
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Connected);
 		// TEMP
 		uint32_t timeout = 10;
 
 		auto result = m_Socket.Send(buffer, bufferSize, timeout);
-		if (result == Socket::SendResult::Fail)
+		if (result == TCPSocket::SendResult::Fail)
 		{
 			RNET_LOG_ERROR("Error sending data to server.");
 			return Result::Fail;
 		}
 		// TEMP
-		else if (result == Socket::SendResult::Disconnected)
+		else if (result == TCPSocket::SendResult::Disconnected)
 		{
 			return Result::Fail;
 		}
 		return Result::Success;
 	}
-	void Client::Disconnect()
+	void TCPClient::Disconnect()
 	{
 		ASSERT(m_Status.load(std::memory_order_acquire) != Status::Disconnected);
 
@@ -72,12 +72,12 @@ namespace RamenNetworking
 		m_IsRunning.store(false, std::memory_order_release); // this will signal the network thread to stop
 		m_NetworkThread.join();
 	}
-	bool Client::TryPollMessage(std::vector<char>& message)
+	bool TCPClient::TryPollMessage(std::vector<char>& message)
 	{
 		auto result = m_MessageQueue.TryPop(message);
 		return result;
 	}
-	void Client::NetworkLoop()
+	void TCPClient::NetworkLoop()
 	{
 		m_Status.store(Status::ConnectingToServer, std::memory_order_release);
 
@@ -100,17 +100,17 @@ namespace RamenNetworking
 			// TEMP
 			uint32_t timeout = 10;
 			auto result = m_Socket.Recieve(messageBuffer.data(), m_MessageSize, timeout);
-			if (result == Socket::RecieveResult::Success)
+			if (result == TCPSocket::RecieveResult::Success)
 			{
 				auto pushResult = m_MessageQueue.TryPush(std::move(messageBuffer));
 				if (!pushResult)
 					RNET_LOG_WARN("Message is dropped because message queue was full.");
 			}
-			else if (result == Socket::RecieveResult::Disconnected)
+			else if (result == TCPSocket::RecieveResult::Disconnected)
 			{
 				break;
 			}
-			else if (result == Socket::RecieveResult::Fail)
+			else if (result == TCPSocket::RecieveResult::Fail)
 			{
 				RNET_LOG_ERROR("Recieving data failed");
 				break;

@@ -6,12 +6,12 @@
 #include <functional>
 
 #include "Defs.h"
-#include "Networking/Socket.h"
+#include "Networking/TCPSocket.h"
 #include "Utilities/MessageQueue.h"
 
 namespace RamenNetworking
 {
-	class Server
+	class TCPServer
 	{
 	public:
 		using ClientID = uint32_t;
@@ -24,11 +24,11 @@ namespace RamenNetworking
 			std::string message;
 		};
 	public:
-		Server(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
-		~Server();
+		TCPServer(size_t messageSize = DEFAULT_MESSAGE_SIZE, size_t messageQueueSize = DEFAULT_MESSAGE_QUEUE_SIZE);
+		~TCPServer();
 
-		Server(const Server&) = delete;
-		Server& operator=(const Server&) = delete;
+		TCPServer(const TCPServer&) = delete;
+		TCPServer& operator=(const TCPServer&) = delete;
 
 		Result Init(const Address& serverAddress);
 		
@@ -45,7 +45,7 @@ namespace RamenNetworking
 		struct ClientConnection
 		{
 			ClientID id; // Mabye use GUID
-			Socket clientSocket;
+			TCPSocket clientSocket;
 			Address address;
 			std::thread clientThread;
 			bool isConnected = true; // TODO: Use enum to manage client state & change to atomic
@@ -64,7 +64,7 @@ namespace RamenNetworking
 		size_t m_MessageQueueSize; // This is not const because this might provide resizing methods in the future.
 		MessageQueue<Message> m_MessageQueue;
 
-		Socket m_ServerSocket{};
+		TCPSocket m_ServerSocket{};
 		Address m_ServerAddress{};
 		std::thread m_MainNetworkThread{};
 		std::thread m_ListenThread{};

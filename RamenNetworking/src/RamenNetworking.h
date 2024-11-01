@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Networking/Socket.h"
+#include "Networking/TCPSocket.h"
 
 #include "Networking/NetworkAPI.h"
 
-#include "Core/Client.h"
-#include "Core/Server.h"
+#include "Core/TCPClient.h"
+#include "Core/TCPServer.h"

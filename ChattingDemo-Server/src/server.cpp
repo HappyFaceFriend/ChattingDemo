@@ -28,7 +28,7 @@ int main()
 		[](RamenNetworking::Address& clientAddress, RamenNetworking::TCPServer::ClientID clientID, bool graceful) {
 			std::cout << "Client " << clientID << " disconnected " << (graceful ? "gracefully" : "disgracefully")<< " - " << clientAddress.IPAddress << ":" << clientAddress.PortNumber << std::endl;
 		}
-		);
+	);
 
 	while (true)
 	{

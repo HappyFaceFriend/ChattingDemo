@@ -12,8 +12,8 @@ GameLayer::GameLayer()
 
 void GameLayer::OnAttach()
 {
-	m_TitleScene = std::make_shared<TitleScene>();
-	m_TitleScene->SetConnectButtonCallback([&](const char* serverIP, const char* serverPortNumber) {
+	m_TitleView = std::make_shared<TitleView>();
+	m_TitleView->SetConnectButtonCallback([&](const char* serverIP, const char* serverPortNumber) {
 		m_ChatClient.Init();
 		m_ChatClient.ConnectToServer({ serverIP, (uint16_t)std::atoi(serverPortNumber) });
 	});
@@ -49,11 +49,12 @@ void GameLayer::OnImGuiUpdate()
 	auto clientStatus = m_ChatClient.GetStatus();
 	if (clientStatus == RamenNetworking::TCPClient::Status::Disconnected)
 	{
-		m_TitleScene->OnImGuiUpdate();
+		m_TitleView->OnImGuiUpdate();
 	}
 	else if (clientStatus == RamenNetworking::TCPClient::Status::Connected)
 	{
-		ImGui::Begin("Test Window");
+
+		ImGui::Begin("Test Window", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 		ImGui::Text("client program");
 
 		ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;

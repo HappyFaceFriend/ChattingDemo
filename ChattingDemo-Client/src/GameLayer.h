@@ -3,7 +3,7 @@
 #include <Ramensoup.h>
 #include <RamenNetworking.h>
 
-#include "Scenes/TitleScene.h"
+#include "Scenes/TitleView.h"
 
 class GameLayer : public Ramensoup::Layer
 {
@@ -26,5 +26,5 @@ private:
 	char m_MsgBuffer[MSG_SIZE] = { 0 };
 	std::vector<std::vector<char>> m_RecievedMessages;
 
-	std::shared_ptr<TitleScene> m_TitleScene;
+	std::shared_ptr<TitleView> m_TitleView;
 };

@@ -11,4 +11,6 @@ namespace ImGuiArithmetics
 	ImVec2 operator-(const ImVec2& a, const ImVec2& b);
 	ImVec2 operator/(const ImVec2& a, float f);
 	ImVec2 operator*(const ImVec2& a, float f); 
+	bool operator==(const ImVec2& a, const ImVec2& b);
+	bool operator!=(const ImVec2& a, const ImVec2& b);
 }

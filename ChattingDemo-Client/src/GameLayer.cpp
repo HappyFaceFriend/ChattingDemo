@@ -13,12 +13,11 @@ GameLayer::GameLayer()
 void GameLayer::OnAttach()
 {
 	m_TitleView = std::make_shared<TitleView>();
+	m_GameView = std::make_shared<GameView>();
 	m_TitleView->SetConnectButtonCallback([&](const char* serverIP, const char* serverPortNumber) {
 		m_ChatClient.Init();
 		m_ChatClient.ConnectToServer({ serverIP, (uint16_t)std::atoi(serverPortNumber) });
 	});
-
-
 }
 
 void GameLayer::OnDetach() noexcept
@@ -27,9 +26,11 @@ void GameLayer::OnDetach() noexcept
 
 void GameLayer::OnUpdate()
 {
+
 	// Poll messages
 	if (m_ChatClient.GetStatus() == RamenNetworking::TCPClient::Status::Connected)
 	{
+		//m_GameView->OnUpdate();
 		while (true)
 		{
 			std::vector<char> message;
@@ -53,8 +54,9 @@ void GameLayer::OnImGuiUpdate()
 	}
 	else if (clientStatus == RamenNetworking::TCPClient::Status::Connected)
 	{
-
-		ImGui::Begin("Test Window", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		m_GameView->OnImGuiRender();
+		
+		ImGui::Begin("Test Window", 0);
 		ImGui::Text("client program");
 
 		ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue;

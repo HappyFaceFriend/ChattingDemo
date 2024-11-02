@@ -35,6 +35,12 @@ namespace RamenNetworking
 		}
 		return Result::Success;
 	}
+
+	void TCPClient::SetConnectedToServerCallback(const ConnectedToServerCallback& connectedToServerCallback)
+	{
+		m_ConnectedToServerCallback = connectedToServerCallback;
+	}
+
 	void TCPClient::ConnectToServer(const Address& serverAddress)
 	{
 		ASSERT(m_Status.load(std::memory_order_acquire) == Status::Disconnected);
@@ -98,7 +104,8 @@ namespace RamenNetworking
 		}
 
 		m_Status.store(Status::Connected, std::memory_order_release);
-
+		if (m_ConnectedToServerCallback)
+			m_ConnectedToServerCallback();
 		// Recieve datas
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{

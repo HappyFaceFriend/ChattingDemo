@@ -4,6 +4,7 @@
 #include <RamenNetworking.h>
 
 #include "Scenes/TitleView.h"
+#include "Scenes/GameView.h"
 
 class GameLayer : public Ramensoup::Layer
 {
@@ -27,4 +28,5 @@ private:
 	std::vector<std::vector<char>> m_RecievedMessages;
 
 	std::shared_ptr<TitleView> m_TitleView;
+	std::shared_ptr<GameView> m_GameView;
 };

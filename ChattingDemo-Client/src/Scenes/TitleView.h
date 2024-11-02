@@ -16,9 +16,8 @@ public:
 	void SetConnectButtonCallback(const ConnectButtonCallback& connectButtonCallback);
 
 	void OnImGuiUpdate();
-private:
-	std::shared_ptr<Ramensoup::Scene> m_Scene;
 
+private:
 	ImVec2 m_InputWindowSize = { 500, 300 };
 
 	char m_ServerIPBuffer[16] = "127.0.0.1";

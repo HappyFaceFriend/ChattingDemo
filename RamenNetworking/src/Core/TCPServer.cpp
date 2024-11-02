@@ -133,7 +133,8 @@ namespace RamenNetworking
 					std::thread([this, clientID = clientID]() { RecieveFromClientThreadFunc(clientID); })
 				};
 
-				m_ClientConnectedCallback(clientInfo.clientAddress, clientID);
+				if (m_ClientConnectedCallback)
+					m_ClientConnectedCallback(clientInfo.clientAddress, clientID);
 			}
 		}
 	}
@@ -197,7 +198,8 @@ namespace RamenNetworking
 
 	void TCPServer::DisconnectClient(ClientID clientID, bool graceful)
 	{
-		m_ClientDisconnectedCallback(m_ClientConnections[clientID].address, clientID, graceful);
+		if (m_ClientDisconnectedCallback)
+			m_ClientDisconnectedCallback(m_ClientConnections[clientID].address, clientID, graceful);
 		m_ClientConnections[clientID].isConnected = false;
 	}
 
